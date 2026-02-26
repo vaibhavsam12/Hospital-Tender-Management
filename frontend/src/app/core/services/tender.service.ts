@@ -6,7 +6,7 @@ import { Tender } from '../../models/models';
 
 @Injectable({ providedIn: 'root' })
 export class TenderService {
-    private base = 'http://localhost:8000/tenders';
+    private base = 'http://127.0.0.1:8000/tenders';
 
     constructor(private http: HttpClient) { }
 

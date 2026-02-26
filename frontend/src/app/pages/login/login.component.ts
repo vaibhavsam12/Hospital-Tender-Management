@@ -1,285 +1,305 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { Router } from '@angular/router';
+import { HttpParams } from '@angular/common/http';
 import { AuthService } from '../../core/services/auth.service';
 
 @Component({
-    selector: 'app-login',
-    standalone: true,
-    imports: [CommonModule, FormsModule, MatCardModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatIconModule, MatProgressBarModule],
-    template: `
-    <div class="login-container">
-      <div class="glass-card login-card">
+  selector: 'app-login',
+  standalone: true,
+  imports: [CommonModule, FormsModule, MatButtonModule, MatIconModule, MatProgressBarModule],
+  template: `
+    <div class="login-page">
+      <div class="background-decor">
+        <div class="circle c1"></div>
+        <div class="circle c2"></div>
+      </div>
+
+      <div class="login-card glass-card">
         <div class="login-header">
-          <div class="logo-circle">
+          <div class="brand-logo">
             <mat-icon>security</mat-icon>
           </div>
           <h1>TenderMed Pro</h1>
-          <p>Procurement Management System</p>
+          <p>Enterprise Procurement Dashboard</p>
         </div>
 
-        <form (ngSubmit)="onSubmit()" #loginForm="ngForm">
-          <mat-form-field appearance="outline" color="accent">
-            <mat-label>Email Address</mat-label>
-            <input matInput type="email" name="email" [(ngModel)]="email" required email placeholder="admin@hospital.com">
-            <mat-icon matPrefix>email</mat-icon>
-          </mat-form-field>
+        <form (ngSubmit)="onSubmit()" #loginForm="ngForm" class="login-form" novalidate>
+          <div class="form-group">
+            <label>Email Address</label>
+            <div class="input-wrapper">
+              <mat-icon class="prefix-icon">mail</mat-icon>
+              <input 
+                type="email" 
+                name="email" 
+                [(ngModel)]="email" 
+                required 
+                placeholder="admin@hospital.com"
+                autocomplete="username"
+              >
+            </div>
+          </div>
 
-          <mat-form-field appearance="outline" color="accent">
-            <mat-label>Password</mat-label>
-            <input matInput [type]="hidePassword ? 'password' : 'text'" name="password" [(ngModel)]="password" required>
-            <mat-icon matPrefix>lock</mat-icon>
-            <button mat-icon-button matSuffix (click)="hidePassword = !hidePassword" type="button">
-              <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
-            </button>
-          </mat-form-field>
+          <div class="form-group">
+            <label>Password</label>
+            <div class="input-wrapper">
+              <mat-icon class="prefix-icon">lock</mat-icon>
+              <input 
+                [type]="hidePassword ? 'password' : 'text'" 
+                name="password" 
+                [(ngModel)]="password" 
+                required
+                placeholder="••••••••"
+                autocomplete="current-password"
+              >
+              <button type="button" class="suffix-btn" (click)="hidePassword = !hidePassword">
+                <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+              </button>
+            </div>
+          </div>
 
-          <div class="error-msg" *ngIf="error">{{error}}</div>
+          <div class="error-msg" *ngIf="error">
+            <mat-icon>error_outline</mat-icon>
+            {{error}}
+          </div>
 
-          <button mat-flat-button color="accent" class="login-btn" [disabled]="loginForm.invalid || loading">
-            <span *ngIf="!loading">Login to Dashboard</span>
-            <mat-progress-bar mode="indeterminate" *ngIf="loading"></mat-progress-bar>
+          <button type="button" class="submit-btn" [disabled]="loading" (click)="onSubmit()">
+            <span *ngIf="!loading">Sign In</span>
+            <span *ngIf="loading" class="loader-content">
+              Authenticating...
+            </span>
+            <div class="btn-glow"></div>
           </button>
         </form>
 
         <div class="login-footer">
-          <p>Don't have an account? <a>Contact Admin</a></p>
+          <p>Don't have access? <a href="mailto:admin@tendermed.pro">Contact Administrator</a></p>
         </div>
       </div>
     </div>
   `,
-    styles: [`
-  /* CONTAINER */
-  .login-container {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, #0c0c1a 0%, #1a0033 50%, #0f0f23 100%);
-    position: relative;
-    overflow: hidden;
-    
-    &::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: 
-        radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
-        radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.3) 0%, transparent 50%);
-      animation: float 20s ease-in-out infinite;
-      pointer-events: none;
-    }
-  }
-
-  /* GLASS CARD - FIXED */
-  .glass-card {
-    width: 100%;
-    max-width: 420px;
-    padding: 2.5rem;
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.125);
-    border-radius: 24px;
-    box-shadow: 
-      0 25px 45px rgba(0,0,0,0.3),
-      0 0 0 1px rgba(255,255,255,0.05),
-      inset 0 1px 0 rgba(255,255,255,0.2);
-    position: relative;
-    overflow: hidden;
-    
-    &::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(145deg, rgba(255,255,255,0.06), rgba(0,0,0,0.1));
-      border-radius: 24px;
-    }
-  }
-
-  /* HEADER */
-  .login-header {
-    text-align: center;
-    margin-bottom: 2rem;
-    
-    .logo-circle {
-      width: 72px;
-      height: 72px;
-      background: rgba(0, 212, 255, 0.15);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(0, 212, 255, 0.3);
-      border-radius: 50%;
+  styles: [`
+    .login-page {
+      height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 0 auto 1.25rem;
-      
-      mat-icon {
-        color: #00d4ff;
-        font-size: 36px;
-        width: 36px;
-        height: 36px;
+      background: #060a12;
+      position: relative;
+      overflow: hidden;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .background-decor {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      .circle {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(100px);
+      }
+      .c1 { width: 500px; height: 500px; background: rgba(0, 212, 255, 0.1); top: -100px; right: -100px; }
+      .c2 { width: 400px; height: 400px; background: rgba(124, 58, 237, 0.08); bottom: -100px; left: -100px; }
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 420px;
+      padding: 48px;
+      border-radius: 28px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(14, 21, 40, 0.7);
+      backdrop-filter: blur(30px) saturate(180%);
+      box-shadow: 0 32px 64px rgba(0, 0, 0, 0.4);
+      z-index: 10;
+      position: relative;
+    }
+
+    .login-header {
+      text-align: center;
+      margin-bottom: 40px;
+      .brand-logo {
+        width: 56px;
+        height: 56px;
+        background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(124, 58, 237, 0.2));
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 16px;
+        border: 1px solid rgba(0, 212, 255, 0.3);
+        mat-icon { color: #00d4ff; font-size: 28px; width: 28px; height: 28px; }
+      }
+      h1 { font-size: 28px; font-weight: 800; color: #fff; margin-bottom: 6px; letter-spacing: -0.5px; }
+      p { color: #8b9cb8; font-size: 14px; }
+    }
+
+    .login-form {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      label {
+        font-size: 11px;
+        font-weight: 700;
+        color: #8b9cb8;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        padding-left: 4px;
       }
     }
-    
-    h1 {
-      margin: 0 0 0.5rem;
-      font-weight: 800;
-      color: #fff;
-      font-size: 28px;
-      background: linear-gradient(135deg, #fff, #e0e7ff);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    
-    p {
-      margin: 0;
-      color: rgba(255, 255, 255, 0.7);
-      font-size: 15px;
-      font-weight: 400;
-    }
-  }
 
-  /* FORM */
-  form {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-  }
+    .input-wrapper {
+      position: relative;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      height: 48px; /* Explicit height to prevent collapsing */
 
-  /* FIELDS - OVERRIDE MATERIAL */
-  mat-form-field {
-    ::ng-deep {
-      .mdc-text-field--filled {
-        border-radius: 16px !important;
-        background: rgba(255, 255, 255, 0.06) !important;
-        backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        
-        &.mdc-text-field--focused {
-          border-color: rgba(0, 212, 255, 0.5) !important;
-          box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+      &:focus-within {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: #00d4ff;
+        box-shadow: 0 0 0 4px rgba(0, 212, 255, 0.1);
+      }
+
+      .prefix-icon {
+        margin-left: 16px;
+        margin-right: 12px;
+        color: #8b9cb8;
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+        flex-shrink: 0;
+      }
+
+      input {
+        background: transparent;
+        border: none;
+        outline: none;
+        color: #f0f4ff;
+        padding: 14px 16px 14px 0;
+        width: 100%;
+        font-size: 15px;
+        flex: 1;
+        line-height: normal;
+        height: 100%;
+
+        &::placeholder { color: rgba(139, 156, 184, 0.4); }
+
+        /* Robust Autofill fix */
+        &:-webkit-autofill,
+        &:-webkit-autofill:hover, 
+        &:-webkit-autofill:focus {
+          -webkit-text-fill-color: #f0f4ff !important;
+          -webkit-box-shadow: 0 0 0px 1000px transparent inset !important;
+          transition: background-color 5000s ease-in-out 0s;
         }
       }
-      
-      .mdc-floating-label {
-        color: rgba(255, 255, 255, 0.8) !important;
-      }
-      
-      .mdc-text-field__input {
-        color: #fff !important;
-        caret-color: #00d4ff !important;
-      }
-      
-      .mdc-line-ripple {
-        background: #00d4ff !important;
+
+      .suffix-btn {
+        background: none;
+        border: none;
+        padding: 0 16px;
+        cursor: pointer;
+        color: #8b9cb8;
+        &:hover { color: #00d4ff; }
+        mat-icon { font-size: 20px; width: 20px; height: 20px; }
       }
     }
-  }
 
-  /* BUTTON */
-  .login-btn {
-    height: 52px !important;
-    border-radius: 16px !important;
-    font-weight: 700 !important;
-    font-size: 16px !important;
-    margin-top: 1rem !important;
-    background: linear-gradient(135deg, #00d4ff, #0099cc) !important;
-    border: none !important;
-    
-    &:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 15px 35px rgba(0, 212, 255, 0.4);
+    .error-msg {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      color: #ff8080;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      mat-icon { font-size: 18px; width: 18px; height: 18px; }
     }
-    
-    ::ng-deep {
-      .mat-mdc-button-touch-target {
-        height: 52px !important;
-      }
+
+    .submit-btn {
+      margin-top: 12px;
+      height: 52px;
+      background: linear-gradient(135deg, #00d4ff, #7c3aed);
+      border: none;
+      border-radius: 14px;
+      color: #fff;
+      font-weight: 700;
+      font-size: 16px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s;
+
+      &:disabled { opacity: 0.6; cursor: not-allowed; }
+      &:not(:disabled):hover { transform: translateY(-1px); }
+      &:not(:disabled):active { transform: translateY(0); }
+
+      .loader-content { display: flex; align-items: center; justify-content: center; gap: 8px; }
     }
-  }
 
-  /* ERROR */
-  .error-msg {
-    color: #ff6b6b;
-    font-size: 13px;
-    text-align: center;
-    padding: 0.5rem;
-    background: rgba(255, 107, 107, 0.15);
-    border: 1px solid rgba(255, 107, 107, 0.3);
-    border-radius: 12px;
-    backdrop-filter: blur(10px);
-  }
-
-  /* FOOTER */
-  .login-footer {
-    margin-top: 2rem;
-    text-align: center;
-    
-    p {
-      color: rgba(255, 255, 255, 0.6);
-      font-size: 14px;
-      margin: 0;
+    .login-footer {
+      margin-top: 40px;
+      text-align: center;
+      p { color: #8b9cb8; font-size: 14px; }
+      a { color: #00d4ff; text-decoration: none; font-weight: 600; &:hover { text-decoration: underline; } }
     }
-    
-    a {
-      color: #00d4ff;
-      text-decoration: none;
-      font-weight: 600;
-      
-      &:hover {
-        text-decoration: underline;
-      }
-    }
-  }
-
-  /* ANIMATIONS */
-  @keyframes float {
-    0%, 100% { transform: translateY(0px) rotate(0deg); }
-    33% { transform: translateY(-30px) rotate(120deg); }
-    66% { transform: translateY(-15px) rotate(240deg); }
-  }
-`]
-
+  `]
 })
 export class LoginComponent {
-    email = '';
-    password = '';
-    loading = false;
-    error = '';
-    hidePassword = true;
+  email = '';
+  password = '';
+  loading = false;
+  error = '';
+  hidePassword = true;
 
-    constructor(private auth: AuthService, private router: Router) { }
+  constructor(private auth: AuthService, private router: Router) { }
 
-    onSubmit() {
-        this.loading = true;
-        this.error = '';
-
-        const formData = new FormData();
-        formData.append('username', this.email);
-        formData.append('password', this.password);
-
-        this.auth.login(formData).subscribe({
-            next: () => {
-                this.router.navigate(['/dashboard']);
-            },
-            error: (err) => {
-                this.loading = false;
-                this.error = 'Invalid email or password';
-                console.error(err);
-            }
-        });
+  onSubmit() {
+    console.log('Login attempt:', this.email);
+    if (!this.email || !this.password) {
+      this.error = 'Please enter both email and password';
+      return;
     }
+
+    this.loading = true;
+    this.error = '';
+
+    const body = new HttpParams()
+      .set('username', this.email)
+      .set('password', this.password);
+
+    this.auth.login(body).subscribe({
+      next: () => {
+        this.router.navigate(['/dashboard']);
+      },
+      error: (err) => {
+        this.loading = false;
+        if (err.status === 0) {
+          this.error = 'Cannot connect to backend. Is the server running on port 8000?';
+        } else if (err.status === 401) {
+          this.error = 'Invalid email or password.';
+        } else {
+          this.error = `Server Error (${err.status}): ${err.message || 'Unknown error'}`;
+        }
+        console.error('Login Error:', err);
+      }
+    });
+  }
 }

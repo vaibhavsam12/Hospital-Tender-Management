@@ -6,8 +6,8 @@ import schemas
 
 
 # ---------- Hospital ----------
-def get_hospitals(db: Session):
-    return db.query(models.Hospital).all()
+def get_hospitals(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.Hospital).offset(skip).limit(limit).all()
 
 
 def get_hospital(db: Session, hospital_id: int):
@@ -76,6 +76,7 @@ def get_bid(db: Session, bid_id: int):
 
 
 def create_bid(db: Session, bid: schemas.BidCreate):
+    # Link to user_id if provided in the schema
     obj = models.Bid(**bid.model_dump())
     db.add(obj)
     db.commit()
@@ -87,10 +88,23 @@ def update_bid(db: Session, bid_id: int, data: schemas.BidUpdate):
     obj = get_bid(db, bid_id)
     if not obj:
         return None
+    
+    was_won = obj.won
     for field, value in data.model_dump(exclude_unset=True).items():
         setattr(obj, field, value)
+    
     db.commit()
     db.refresh(obj)
+
+    # Trigger notification if won status changes to true
+    if not was_won and obj.won and obj.user_id:
+        create_notification(
+            db,
+            user_id=obj.user_id,
+            title="🎯 Bid Awarded!",
+            message=f"Your bid for Tender #{obj.tender_id} has been accepted.",
+            link=f"/tenders/{obj.tender_id}"
+        )
     return obj
 
 
@@ -117,6 +131,16 @@ def get_analytics_summary(db: Session):
         {"category": r.category or "Other", "count": r.count, "total_budget": r.total_budget or 0.0}
         for r in cat_rows
     ]
+    return schemas.AnalyticsSummary(
+        total_tenders=total,
+        active_tenders=active,
+        awarded_tenders=awarded,
+        closed_tenders=closed,
+        total_budget=total_budget,
+        total_bids=total_bids,
+        avg_bids_per_tender=round(avg_bids, 1) if total > 0 else 0.0,
+        by_category=by_category
+    )
 
 # ---------- User ----------
 def get_user_by_email(db: Session, email: str):
@@ -152,3 +176,75 @@ def log_action(db: Session, action: str, table_name: str, record_id: int, user_i
 
 def get_audit_logs(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.AuditLog).order_by(models.AuditLog.timestamp.desc()).offset(skip).limit(limit).all()
+
+
+# ---------- Notification ----------
+def create_notification(db: Session, user_id: int, title: str, message: str, link: Optional[str] = None):
+    obj = models.Notification(user_id=user_id, title=title, message=message, link=link)
+    db.add(obj)
+    db.commit()
+    db.refresh(obj)
+    return obj
+
+
+def get_notifications(db: Session, user_id: int, skip: int = 0, limit: int = 50):
+    return db.query(models.Notification).filter(models.Notification.user_id == user_id).order_by(models.Notification.created_at.desc()).offset(skip).limit(limit).all()
+
+
+def mark_notification_read(db: Session, notification_id: int):
+    obj = db.query(models.Notification).filter(models.Notification.id == notification_id).first()
+    if obj:
+        obj.is_read = True
+        db.commit()
+        db.refresh(obj)
+    return obj
+
+
+# ---------- Clarification ----------
+def create_clarification(db: Session, tender_id: int, user_id: int, asker_name: str, question: str):
+    obj = models.Clarification(tender_id=tender_id, user_id=user_id, asker_name=asker_name, question=question)
+    db.add(obj)
+    db.commit()
+    db.refresh(obj)
+    return obj
+
+
+def answer_clarification(db: Session, clarification_id: int, answer: str):
+    from datetime import datetime
+    obj = db.query(models.Clarification).filter(models.Clarification.id == clarification_id).first()
+    if obj:
+        obj.answer = answer
+        obj.answered_at = datetime.utcnow()
+        db.commit()
+        db.refresh(obj)
+    return obj
+
+
+def get_clarifications(db: Session, tender_id: int):
+    return db.query(models.Clarification).filter(models.Clarification.tender_id == tender_id).order_by(models.Clarification.created_at.desc()).all()
+
+
+def get_vendor_stats(db: Session, user_id: int):
+    # Total bids by this user
+    total_bids = db.query(func.count(models.Bid.id)).filter(models.Bid.user_id == user_id).scalar()
+    # Won bids
+    won_bids = db.query(func.count(models.Bid.id)).filter(models.Bid.user_id == user_id, models.Bid.won == True).scalar()
+    # Win rate
+    win_rate = (won_bids / total_bids * 100) if total_bids > 0 else 0.0
+    # Total bid value
+    total_val = db.query(func.sum(models.Bid.amount)).filter(models.Bid.user_id == user_id).scalar() or 0.0
+    # Active bids (bids on open tenders)
+    active_bids = (
+        db.query(func.count(models.Bid.id))
+        .join(models.Tender)
+        .filter(models.Bid.user_id == user_id, models.Tender.status == "open")
+        .scalar()
+    )
+    
+    return schemas.VendorStats(
+        total_bids=total_bids,
+        won_bids=won_bids,
+        win_rate=float(int(win_rate * 10) / 10.0),
+        total_bid_value=total_val,
+        active_bids=active_bids
+    )

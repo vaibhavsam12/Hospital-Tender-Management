@@ -20,6 +20,7 @@ def list_tenders(
     return crud.get_tenders(db, status=status, hospital_id=hospital_id, skip=skip, limit=limit)
 
 
+@router.post("/", response_model=schemas.TenderOut, status_code=201)
 def create_tender(
     tender: schemas.TenderCreate,
     db: Session = Depends(get_db),
@@ -39,10 +40,16 @@ def get_tender(tender_id: int, db: Session = Depends(get_db)):
 
 
 @router.put("/{tender_id}", response_model=schemas.TenderOut)
-def update_tender(tender_id: int, data: schemas.TenderUpdate, db: Session = Depends(get_db)):
+def update_tender(
+    tender_id: int, 
+    data: schemas.TenderUpdate, 
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth_utils.check_role(["admin", "officer"]))
+):
     obj = crud.update_tender(db, tender_id, data)
     if not obj:
         raise HTTPException(status_code=404, detail="Tender not found")
+    crud.log_action(db, "update_tender", "tenders", tender_id, current_user.id, f"Updated: {data.model_dump(exclude_unset=True)}")
     return obj
 
 

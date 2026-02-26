@@ -1,19 +1,25 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { BehaviorSubject, Observable, tap, switchMap } from 'rxjs';
 import { User, AuthResponse } from '../../models/models';
 import { Router } from '@angular/router';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-    private apiUrl = 'http://localhost:8000/auth';
+    private apiUrl = 'http://127.0.0.1:8000/auth';
     private currentUserSubject = new BehaviorSubject<User | null>(null);
     public currentUser$ = this.currentUserSubject.asObservable();
 
     constructor(private http: HttpClient, private router: Router) {
-        const savedUser = localStorage.getItem('user');
-        if (savedUser) {
-            this.currentUserSubject.next(JSON.parse(savedUser));
+        try {
+            const savedUser = localStorage.getItem('user');
+            if (savedUser && savedUser !== 'undefined' && savedUser !== 'null') {
+                this.currentUserSubject.next(JSON.parse(savedUser));
+            }
+        } catch (e) {
+            console.warn('Corrupted user data found in localStorage. Clearing it.');
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
         }
     }
 
@@ -21,11 +27,13 @@ export class AuthService {
         return this.currentUserSubject.value;
     }
 
-    login(credentials: FormData): Observable<AuthResponse> {
-        return this.http.post<AuthResponse>(`${this.apiUrl}/login`, credentials).pipe(
-            tap(res => {
+    login(credentials: HttpParams): Observable<User> {
+        return this.http.post<AuthResponse>(`${this.apiUrl}/login`, credentials, {
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+        }).pipe(
+            switchMap(res => {
                 localStorage.setItem('token', res.access_token);
-                this.fetchMe().subscribe();
+                return this.fetchMe();
             })
         );
     }

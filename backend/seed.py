@@ -14,6 +14,7 @@ Base.metadata.create_all(bind=engine)
 db = SessionLocal()
 
 # ---- Clear existing data ----
+print("Cleaning old data...")
 db.query(models.AuditLog).delete()
 db.query(models.Bid).delete()
 db.query(models.Tender).delete()
@@ -24,6 +25,7 @@ db.commit()
 # ---- Users ----
 from auth_utils import get_password_hash
 
+print("Seeding Users...")
 users_data = [
     {"email": "admin@hospital.com", "full_name": "System Admin", "role": "admin", "password": "password123"},
     {"email": "officer@hospital.com", "full_name": "Procurement Officer", "role": "officer", "password": "password123"},
@@ -32,6 +34,7 @@ users_data = [
     {"email": "vendor@careplus.com", "full_name": "CarePlus Manager", "role": "vendor", "password": "password123"},
 ]
 
+all_users = []
 for u in users_data:
     db_user = models.User(
         email=u["email"],
@@ -40,9 +43,14 @@ for u in users_data:
         hashed_password=get_password_hash(u["password"])
     )
     db.add(db_user)
+    all_users.append(db_user)
 db.commit()
 
+admin_user = all_users[0]
+vendor_user = all_users[3]
+
 # ---- Hospitals ----
+print("Seeding Hospitals...")
 hospitals_data = [
     {"name": "AIIMS Delhi", "location": "New Delhi", "type": "Government"},
     {"name": "Apollo Hospitals", "location": "Mumbai", "type": "Private"},
@@ -60,6 +68,7 @@ for h in hospitals:
     db.refresh(h)
 
 # ---- Tenders ----
+print("Seeding Tenders...")
 categories = ["Equipment", "Drugs", "Services", "IT", "Infrastructure"]
 statuses = ["open", "open", "open", "closed", "awarded"]
 tender_titles = [
@@ -73,14 +82,14 @@ tender_titles = [
 ]
 
 tenders = []
-base_date = datetime(2025, 9, 1)
+base_date = datetime.now() - timedelta(days=90)
 for i, title in enumerate(tender_titles):
     hosp = random.choice(hospitals)
     cat = categories[i % len(categories)]
     status = statuses[i % len(statuses)]
     budget = round(random.uniform(500_000, 25_000_000), 2)
-    deadline = base_date + timedelta(days=random.randint(30, 180))
-    created = base_date - timedelta(days=random.randint(5, 60))
+    deadline = datetime.now() + timedelta(days=random.randint(10, 60))
+    created = base_date + timedelta(days=i*4)
     t = models.Tender(
         hospital_id=hosp.id,
         title=title,
@@ -98,7 +107,8 @@ for t in tenders:
     db.refresh(t)
 
 # ---- Bids ----
-vendors = [
+print("Seeding Bids...")
+vendor_names = [
     "MedEquip India Pvt Ltd", "SunPharma Supplies", "TechMedics Solutions",
     "HealthFirst Vendors", "BioMed Exports", "NovaCare Distributors",
     "AlphaHealth Systems", "ZenithMed", "CureMed Logistics", "PrimeCare India",
@@ -111,7 +121,7 @@ for tender in tenders:
     for j, amount in enumerate(amounts):
         b = models.Bid(
             tender_id=tender.id,
-            vendor_name=random.choice(vendors),
+            vendor_name=random.choice(vendor_names),
             amount=amount,
             notes=f"Best quality guaranteed. Delivery within 30 days. Warranty: 2 years.",
             submitted_at=tender.created_at + timedelta(days=random.randint(1, 15)),
@@ -120,9 +130,23 @@ for tender in tenders:
         db.add(b)
 db.commit()
 
-print("✅ Database seeded successfully!")
+# ---- Audit Logs ----
+print("Seeding Audit Logs...")
+initial_logs = [
+    {"action": "login", "table_name": "users", "record_id": admin_user.id, "user_id": admin_user.id, "details": "Admin logged in"},
+    {"action": "create_tender", "table_name": "tenders", "record_id": tenders[0].id, "user_id": admin_user.id, "details": f"Created tender: {tenders[0].title}"},
+    {"action": "submit_bid", "table_name": "bids", "record_id": 1, "user_id": vendor_user.id, "details": "Vendor MediSync submitted bid for primary tender"},
+    {"action": "update_tender", "table_name": "tenders", "record_id": tenders[-1].id, "user_id": admin_user.id, "details": "Marked tender as awarded"},
+]
+for log_data in initial_logs:
+    log = models.AuditLog(**log_data)
+    db.add(log)
+db.commit()
+
+print("✅ Base seeding complete!")
+bid_count = db.query(models.Bid).count()
 print(f"   Hospitals : {len(hospitals)}")
 print(f"   Tenders   : {len(tenders)}")
-bid_count = db.query(models.Bid).count()
 print(f"   Bids      : {bid_count}")
+print(f"   Logs      : {len(initial_logs)}")
 db.close()

@@ -5,7 +5,7 @@ from typing import List
 
 router = APIRouter(prefix="/audit", tags=["audit"])
 
-@router.get("/", response_model=List[dict])
+@router.get("/", response_model=List[schemas.AuditLogOut])
 def get_audit_logs(
     skip: int = 0,
     limit: int = 100,

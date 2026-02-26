@@ -9,10 +9,10 @@ import { AuthService } from '../../core/services/auth.service';
 import { Bid } from '../../models/models';
 
 @Component({
-    selector: 'app-my-bids',
-    standalone: true,
-    imports: [CommonModule, MatTableModule, MatIconModule, MatButtonModule, MatChipsModule],
-    template: `
+  selector: 'app-my-bids',
+  standalone: true,
+  imports: [CommonModule, MatTableModule, MatIconModule, MatButtonModule, MatChipsModule],
+  template: `
     <div class="page-container">
       <div class="page-header">
         <div>
@@ -52,7 +52,7 @@ import { Bid } from '../../models/models';
           <ng-container matColumnDef="quotation">
             <th mat-header-cell *matHeaderCellDef>Quotation</th>
             <td mat-cell *matCellDef="let bid">
-              <a *ngIf="bid.quotation_url" [href]="'http://localhost:8000' + bid.quotation_url" target="_blank" mat-icon-button color="accent">
+              <a *ngIf="bid.quotation_url" [href]="'http://127.0.0.1:8000' + bid.quotation_url" target="_blank" mat-icon-button color="accent">
                 <mat-icon>file_download</mat-icon>
               </a>
               <span *ngIf="!bid.quotation_url" class="no-file">No file</span>
@@ -70,7 +70,7 @@ import { Bid } from '../../models/models';
       </div>
     </div>
   `,
-    styles: [`
+  styles: [`
     .amount-cell { font-weight: 600; color: #00d4ff; }
     .no-file { color: #8a8d98; font-size: 12px; }
     .mat-chip.won { background-color: rgba(76, 175, 80, 0.2); color: #4caf50; }
@@ -84,22 +84,22 @@ import { Bid } from '../../models/models';
   `]
 })
 export class MyBidsComponent implements OnInit {
-    myBids: Bid[] = [];
-    displayedColumns: string[] = ['tender', 'amount', 'submitted_at', 'status', 'quotation'];
+  myBids: Bid[] = [];
+  displayedColumns: string[] = ['tender', 'amount', 'submitted_at', 'status', 'quotation'];
 
-    constructor(private bidService: BidService, private auth: AuthService) { }
+  constructor(private bidService: BidService, private auth: AuthService) { }
 
-    ngOnInit() {
-        this.loadMyBids();
-    }
+  ngOnInit() {
+    this.loadMyBids();
+  }
 
-    loadMyBids() {
-        const userEmail = this.auth.currentUserValue?.full_name; // Simple mock filter
-        // In a real app, the backend would filter by user_id from token
-        this.bidService.getBids().subscribe(bids => {
-            // Mock filtering for demo: find bids matching the current vendor's "name"
-            // Since my seed script uses random vendor names, I'll just show all for now or filter by some logic
-            this.myBids = bids;
-        });
-    }
+  loadMyBids() {
+    const userEmail = this.auth.currentUserValue?.full_name; // Simple mock filter
+    // In a real app, the backend would filter by user_id from token
+    this.bidService.getBids().subscribe(bids => {
+      // Mock filtering for demo: find bids matching the current vendor's "name"
+      // Since my seed script uses random vendor names, I'll just show all for now or filter by some logic
+      this.myBids = bids;
+    });
+  }
 }

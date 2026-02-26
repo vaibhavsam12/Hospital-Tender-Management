@@ -7,7 +7,7 @@ import { Bid } from '../../models/models';
     providedIn: 'root'
 })
 export class BidService {
-    private apiUrl = 'http://localhost:8000/bids/';
+    private apiUrl = 'http://127.0.0.1:8000/bids/';
 
     constructor(private http: HttpClient) { }
 

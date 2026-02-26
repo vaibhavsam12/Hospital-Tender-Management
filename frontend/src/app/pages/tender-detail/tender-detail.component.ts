@@ -6,10 +6,11 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { TenderService } from '../../core/services/tender.service';
 import { BidService } from '../../core/services/bid.service';
+import { ClarificationService } from '../../core/services/clarification.service';
 import { AuthService } from '../../core/services/auth.service';
-import { Tender, Bid } from '../../models/models';
+import { Tender, Bid, Clarification } from '../../models/models';
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 @Component({
   selector: 'app-tender-detail',
@@ -36,8 +37,8 @@ import 'jspdf-autotable';
         <div class="card detail-card">
           <div class="info-row">
             <div class="info-item">
-              <span class="info-label">Status</span>
-              <span class="status-chip" [ngClass]="tender.status">{{ tender.status | titlecase }}</span>
+              <span class="info-label">Status </span>
+              <span class="status-chip" [ngClass]="tender.status"> {{ tender.status | titlecase }}</span>
             </div>
             <div class="info-item">
               <span class="info-label">Budget</span>
@@ -45,12 +46,12 @@ import 'jspdf-autotable';
             </div>
             <div class="info-item">
               <span class="info-label">Deadline</span>
-              <span class="info-value">{{ tender.deadline ? (tender.deadline | date:'dd MMM yyyy') : 'N/A' }}</span>
+              <span class="info-value"> {{ tender.deadline ? (tender.deadline | date:'dd MMM yyyy') : 'N/A' }}</span>
             </div>
           </div>
           <div class="description-section" *ngIf="tender.description">
             <div class="info-label" style="margin-bottom:8px">Description</div>
-            <p class="description-text">{{ tender.description }}</p>
+            <p class="description-text"> {{ tender.description }}</p>
           </div>
         </div>
 
@@ -123,7 +124,7 @@ import 'jspdf-autotable';
                 </span>
               </td>
               <td *ngIf="!compareMode">
-                <a *ngIf="b.quotation_url" [href]="'http://localhost:8000' + b.quotation_url" target="_blank" style="color:var(--accent)">
+                <a *ngIf="b.quotation_url" [href]="'http://127.0.0.1:8000' + b.quotation_url" target="_blank" style="color:var(--accent)">
                   <mat-icon style="font-size:18px">file_download</mat-icon>
                 </a>
               </td>
@@ -132,11 +133,63 @@ import 'jspdf-autotable';
                 <span *ngIf="!b.won" class="pending-badge">Pending</span>
               </td>
               <td *ngIf="!compareMode">
-                <button *ngIf="!b.won && auth.hasRole(['admin', 'officer']) && tender.status !== 'awarded'" class="mark-winner-btn" (click)="markWinner(b)">Mark Won</button>
+                <button *ngIf="!b.won && auth.hasRole(['admin', 'officer']) && tender.status !== 'awarded'" 
+                        class="mark-winner-btn" 
+                        (click)="markWinner(b)"
+                        [disabled]="awardingId === b.id">
+                  {{ awardingId === b.id ? 'Working...' : 'Mark Won' }}
+                </button>
               </td>
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <!-- Q&A Section -->
+      <div class="card qa-card" style="margin-top: 24px;">
+        <div class="section-title">Clarifications & Q&A</div>
+        
+        <div class="qa-list">
+          <div class="qa-item" *ngFor="let q of clarifications">
+            <div class="question-row">
+              <span class="asker">{{ q.asker_name }} asked:</span>
+              <span class="q-text">{{ q.question }}</span>
+              <span class="q-date">{{ q.created_at | date:'short' }}</span>
+            </div>
+            <div class="answer-row" *ngIf="q.answer">
+              <mat-icon>reply</mat-icon>
+              <div class="a-content">
+                <span class="a-text">{{ q.answer }}</span>
+                <span class="a-date">Answered on {{ q.answered_at | date:'short' }}</span>
+              </div>
+            </div>
+            <div class="answer-row pending" *ngIf="!q.answer && auth.hasRole(['admin', 'officer'])">
+              <mat-icon>reply</mat-icon>
+              <div class="a-form">
+                <textarea [(ngModel)]="replyText[q.id]" placeholder="Provide a clarification..."></textarea>
+                <button class="btn-small" (click)="submitAnswer(q.id)">Respond</button>
+              </div>
+            </div>
+            <div class="answer-row pending" *ngIf="!q.answer && !auth.hasRole(['admin', 'officer'])">
+              <mat-icon style="opacity:0.3">reply</mat-icon>
+              <span class="pending-text">Awaiting official response...</span>
+            </div>
+          </div>
+          
+          <div class="empty-qa" *ngIf="clarifications.length === 0">
+            <mat-icon style="opacity:0.2; font-size:40px; width:40px; height:40px; margin-bottom:12px">question_answer</mat-icon>
+            <p>No clarifications requested yet.</p>
+          </div>
+        </div>
+
+        <div class="ask-section" *ngIf="auth.hasRole(['vendor']) && tender.status === 'open'">
+          <hr style="margin: 24px 0; border: none; border-top: 1px solid rgba(255,255,255,0.05);">
+          <div class="info-label" style="margin-bottom: 12px;">Ask a Question</div>
+          <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <textarea style="flex: 1; min-height:80px" [(ngModel)]="newQuestion" placeholder="Need clarity on technical specs or delivery?"></textarea>
+            <button class="btn-accent" style="padding: 12px 24px" (click)="askQuestion()" [disabled]="!newQuestion">Post Question</button>
+          </div>
+        </div>
       </div>
 
     </div>
@@ -146,7 +199,6 @@ import 'jspdf-autotable';
     .export-btn { background: rgba(0, 212, 255, 0.1); color: var(--accent); border: 1px solid rgba(0,212,255,0.2); border-radius: 8px; padding: 8px 16px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 13px; transition: all 0.3s; &:hover { background: var(--accent); color: #000; } }
     .detail-grid { display: grid; grid-template-columns: 1fr 340px; gap: 16px; margin-bottom: 24px; }
     .info-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
-    .info-item { display: flex; flex-direction: column; gap: 6px; }
     .info-label { font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; }
     .info-value { font-size: 15px; font-weight: 500; color: var(--text-primary); }
     .info-value.big { font-size: 22px; font-weight: 700; color: #10b981; }
@@ -167,11 +219,39 @@ import 'jspdf-autotable';
       }
     }
     .mark-winner-btn { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); padding: 4px 10px; border-radius: 6px; cursor: pointer; &:hover { border-color: var(--accent); color: var(--accent); } }
+
+    .qa-card {
+      .qa-list { display: flex; flex-direction: column; gap: 20px; }
+      .qa-item {
+        background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 16px;
+        .question-row { display: flex; flex-direction: column; gap: 8px;
+          .asker { font-size: 11px; font-weight: 700; color: var(--accent); text-transform: uppercase; }
+          .q-text { font-size: 15px; color: #fff; line-height: 1.5; }
+          .q-date { font-size: 10px; color: #4f5b71; }
+        }
+        .answer-row { margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; gap: 12px;
+          mat-icon { color: var(--accent); transform: rotate(180deg); }
+          .a-content { flex:1;
+            .a-text { font-size: 14px; color: #cbd5e1; line-height: 1.5; }
+            .a-date { display: block; margin-top: 6px; font-size: 10px; color: #4f5b71; }
+          }
+          .pending-text { font-size: 13px; color: #4f5b71; font-style: italic; }
+          .a-form { flex: 1; display: flex; flex-direction: column; gap: 10px;
+            textarea { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 10px; color: #fff; width: 100%; min-height: 60px; outline: none; &:focus { border-color: var(--accent); } }
+            .btn-small { background: var(--accent); color: #000; border: none; padding: 6px 16px; border-radius: 6px; font-weight: 600; font-size: 12px; cursor: pointer; width: fit-content; align-self: flex-end; }
+          }
+        }
+      }
+      .empty-qa { padding: 40px; text-align: center; color: #4f5b71; display: flex; flex-direction: column; align-items: center; }
+    }
   `]
 })
 export class TenderDetailComponent implements OnInit {
   tender: Tender | null = null;
   bids: Bid[] = [];
+  clarifications: Clarification[] = [];
+  newQuestion = '';
+  replyText: { [key: number]: string } = {};
   newBid = { amount: 0, notes: '' };
   selectedFile: File | null = null;
   submitting = false;
@@ -182,6 +262,7 @@ export class TenderDetailComponent implements OnInit {
     public auth: AuthService,
     private tenderSvc: TenderService,
     private bidSvc: BidService,
+    private clarifSvc: ClarificationService,
     private snack: MatSnackBar
   ) { }
 
@@ -190,6 +271,30 @@ export class TenderDetailComponent implements OnInit {
     this.tenderSvc.getTender(id).subscribe(t => {
       this.tender = t;
       this.bids = t.bids ?? [];
+    });
+    this.loadClarifications(id);
+  }
+
+  loadClarifications(id: number) {
+    this.clarifSvc.getClarifications(id).subscribe(c => this.clarifications = c);
+  }
+
+  askQuestion() {
+    if (!this.tender || !this.newQuestion) return;
+    this.clarifSvc.askQuestion(this.tender.id, this.newQuestion).subscribe(q => {
+      this.clarifications = [q, ...this.clarifications];
+      this.newQuestion = '';
+      this.snack.open('Question posted!', 'OK', { duration: 3000 });
+    });
+  }
+
+  submitAnswer(clarificationId: number) {
+    const answer = this.replyText[clarificationId];
+    if (!answer) return;
+    this.clarifSvc.answerQuestion(clarificationId, answer).subscribe(updated => {
+      this.clarifications = this.clarifications.map(c => c.id === clarificationId ? updated : c);
+      delete this.replyText[clarificationId];
+      this.snack.open('Clarification sent!', 'OK', { duration: 3000 });
     });
   }
 
@@ -234,52 +339,70 @@ export class TenderDetailComponent implements OnInit {
     });
   }
 
+  awardingId: number | null = null;
+
   markWinner(bid: Bid) {
-    this.bidSvc.updateBid(bid.id, { won: true }).subscribe(() => {
-      this.bids = this.bids.map(b => ({ ...b, won: b.id === bid.id }));
-      if (this.tender) this.tenderSvc.updateTender(this.tender.id, { status: 'awarded' }).subscribe(t => this.tender = t);
+    this.awardingId = bid.id;
+    this.bidSvc.updateBid(bid.id, { won: true }).subscribe({
+      next: () => {
+        this.bids = this.bids.map(b => ({ ...b, won: b.id === bid.id }));
+        if (this.tender) {
+          this.tenderSvc.updateTender(this.tender.id, { status: 'awarded' }).subscribe(t => {
+            this.tender = t;
+            this.awardingId = null;
+          });
+        } else {
+          this.awardingId = null;
+        }
+      },
+      error: () => this.awardingId = null
     });
   }
 
   exportPDF() {
     if (!this.tender) return;
 
-    const doc = new jsPDF() as any;
+    try {
+      const doc = new jsPDF();
 
-    // Header
-    doc.setFontSize(22); doc.setTextColor(0, 212, 255);
-    doc.text('Tender Comparison Report', 14, 22);
+      // Header
+      doc.setFontSize(22); doc.setTextColor(0, 172, 193);
+      doc.text('Tender Comparison Report', 14, 22);
 
-    doc.setFontSize(10); doc.setTextColor(100);
-    doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 30);
+      doc.setFontSize(10); doc.setTextColor(100);
+      doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 30);
 
-    // Tender Details
-    doc.setFontSize(14); doc.setTextColor(0);
-    doc.text('Tender Information', 14, 45);
-    doc.setFontSize(10);
-    doc.text(`Title: ${this.tender.title}`, 14, 52);
-    doc.text(`Hospital: ${this.tender.hospital?.name}`, 14, 57);
-    doc.text(`Budget: INR ${this.formatLakh(this.tender.budget)} Lakhs`, 14, 62);
-    doc.text(`Status: ${this.tender.status?.toUpperCase()}`, 14, 67);
+      // Tender Details
+      doc.setFontSize(14); doc.setTextColor(0);
+      doc.text('Tender Information', 14, 45);
+      doc.setFontSize(10);
+      doc.text(`Title: ${this.tender.title}`, 14, 52);
+      doc.text(`Hospital: ${this.tender.hospital?.name || 'N/A'}`, 14, 57);
+      doc.text(`Budget: INR ${this.formatLakh(this.tender.budget)} Lakhs`, 14, 62);
+      doc.text(`Status: ${this.tender.status?.toUpperCase()}`, 14, 67);
 
-    // Bids Table
-    const tableData = this.bids.map((b, i) => [
-      i + 1,
-      b.vendor_name,
-      `INR ${b.amount.toLocaleString()}`,
-      this.isL1(b) ? 'YES (L1)' : 'No',
-      b.won ? 'Winner' : 'Pending'
-    ]);
+      // Bids Table
+      const tableData = this.bids.map((b, i) => [
+        i + 1,
+        b.vendor_name,
+        `INR ${b.amount.toLocaleString()}`,
+        this.isL1(b) ? 'YES (L1)' : 'No',
+        b.won ? 'Winner' : 'Pending'
+      ]);
 
-    doc.autoTable({
-      startY: 75,
-      head: [['#', 'Vendor', 'Quote Amount', 'is L1?', 'Status']],
-      body: tableData,
-      headStyles: { fillColor: [0, 172, 193] },
-      alternateRowStyles: { fillColor: [245, 245, 245] }
-    });
+      autoTable(doc, {
+        startY: 75,
+        head: [['#', 'Vendor', 'Quote Amount', 'is L1?', 'Status']],
+        body: tableData,
+        headStyles: { fillColor: [0, 172, 193] },
+        alternateRowStyles: { fillColor: [245, 245, 245] }
+      });
 
-    doc.save(`Tender_Report_${this.tender.id}.pdf`);
+      doc.save(`Tender_Report_${this.tender.id}.pdf`);
+    } catch (err) {
+      console.error('PDF Export failed', err);
+      this.snack.open('Failed to generate PDF. Check console.', 'X', { duration: 5000 });
+    }
   }
 
   formatLakh(v: number) { return (v / 100000).toFixed(2); }

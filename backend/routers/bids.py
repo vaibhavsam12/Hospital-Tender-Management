@@ -5,7 +5,8 @@ from typing import List, Optional
 import crud
 import schemas
 import auth_utils, models
-from database import get_db
+from fastapi.responses import FileResponse
+import uuid, os
 
 router = APIRouter(prefix="/bids", tags=["bids"])
 
@@ -30,16 +31,20 @@ async def submit_bid(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth_utils.check_role(["vendor", "admin"]))
 ):
-    # Handle file upload
+    # Handle file upload (Secure: use UUID)
     quotation_url = None
     if file:
-        file_path = f"uploads/{file.filename}"
+        if not os.path.exists("uploads"): os.makedirs("uploads")
+        ext = file.filename.split(".")[-1]
+        unique_name = f"{uuid.uuid4()}.{ext}"
+        file_path = f"uploads/{unique_name}"
         with open(file_path, "wb") as f:
             f.write(await file.read())
-        quotation_url = f"/uploads/{file.filename}"
+        quotation_url = unique_name # Only store the filename
 
     bid_schema = schemas.BidCreate(
         tender_id=tender_id,
+        user_id=current_user.id,
         vendor_name=vendor_name,
         amount=amount,
         notes=notes
@@ -66,3 +71,25 @@ def update_bid(
         raise HTTPException(status_code=404, detail="Bid not found")
     crud.log_action(db, "update_bid", "bids", bid_id, current_user.id, f"Updated fields: {data.model_dump(exclude_unset=True)}")
     return obj
+@router.get("/{bid_id}/download")
+def download_quotation(
+    bid_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth_utils.get_current_user)
+):
+    bid = crud.get_bid(db, bid_id)
+    if not bid or not bid.quotation_url:
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    # RBAC: Only bid owner or staff can download
+    is_staff = current_user.role in ["admin", "officer", "finance"]
+    is_owner = bid.user_id == current_user.id
+    
+    if not (is_staff or is_owner):
+        raise HTTPException(status_code=403, detail="Not authorized to access this file")
+        
+    file_path = os.path.join("uploads", bid.quotation_url)
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="Physical file missing")
+        
+    return FileResponse(file_path)
