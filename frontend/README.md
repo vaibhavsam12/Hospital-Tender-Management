@@ -1,27 +1,113 @@
-# Frontend
+# 🏥 Hospital Tender Management Platform
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 17.3.17.
+A role-based healthcare procurement management system designed to digitize hospital tender workflows, vendor coordination, and procurement analytics.
 
-## Development server
+The platform centralizes tender lifecycle management and aims to evolve into a data-driven procurement intelligence system.
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+---
 
-## Code scaffolding
+## 🚀 Vision
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+Hospitals often manage procurement using fragmented systems or manual processes.  
+This platform provides a structured, secure, and scalable solution to:
 
-## Build
+- Manage tenders end-to-end
+- Coordinate vendor bidding
+- Compare bids intelligently
+- Track procurement analytics
+- Maintain audit-ready logs
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+Long-term goal: Build an intelligent procurement platform powered by analytics and predictive insights.
 
-## Running unit tests
+---
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+## 🧩 Core Features
 
-## Running end-to-end tests
+### 🔐 Authentication & Access Control
+- JWT-based authentication
+- Role-Based Access Control (Admin / Vendor / Finance)
+- Protected frontend routes and backend endpoints
 
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+### 📄 Tender Lifecycle Management
+- Create, update, and publish tenders
+- Status tracking (Draft, Open, Closed, Awarded)
+- Multi-stage workflow handling
 
-## Further help
+### 💰 Bid Management
+- Vendor bid submission
+- File upload support
+- L1 (Lowest Bidder) detection
+- Structured bid comparison
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+### 📊 Analytics Dashboard
+- Budget distribution by category
+- Tender status insights
+- Vendor performance overview
+- Procurement trend visualization
+
+### 🧾 Audit Trail
+- System action logging
+- User-based activity tracking
+- Compliance-friendly logs
+
+### 🔎 Filtering & Pagination
+- API-driven filtering
+- Search functionality
+- Category & status filters
+- Pagination support
+
+---
+
+## 🏗 Tech Stack
+
+### Frontend
+- Angular 17 (Standalone Components)
+- Angular Material
+- Responsive UI architecture
+- Modular component design
+
+### Backend
+- REST API architecture
+- JWT Authentication
+- Role-based middleware
+- File upload handling
+- Audit logging layer
+
+### Database
+- Relational SQL schema
+- Optimized queries for filtering and pagination
+
+---
+
+## 📂 Project Structure
+Hospital-Tender-Management/
+│
+├── backend/ # API layer, authentication, models, business logic
+├── frontend/ # Angular application
+├── scripts/ # Utility scripts
+└── README.md
+
+
+---
+
+## 🛠 Development Setup
+
+### 1️⃣ Clone the Repository
+
+```bash
+git clone <your-repo-url>
+cd Hospital-Tender-Management
+
+2️⃣ Backend Setup
+cd backend
+# Install dependencies
+# Configure environment variables
+# Start backend server
+
+3️⃣ Frontend Setup
+cd frontend
+npm install
+ng serve
+
+Frontend runs at:
+http://localhost:4200
