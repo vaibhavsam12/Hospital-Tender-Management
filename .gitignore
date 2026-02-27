@@ -1,0 +1,19 @@
+# Database
+*.db
+*.sqlite3
+
+# Uploads
+uploads/
+
+# Environment files
+.env
+.env.*
+
+# Python
+__pycache__/
+*.pyc
+venv/
+
+# Node
+node_modules/
+dist/
