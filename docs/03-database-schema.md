@@ -1,6 +1,6 @@
 <!-- # API Contracts
 
-## GET /api/tenders
+## GET /api/projects
 
 ### Query Parameters
 - page (number)
@@ -14,7 +14,7 @@
 ### Response
 
 {
-  data: Tender[],
+  data: Project[],
   total: number,
   page: number,
   total_pages: number
@@ -25,7 +25,7 @@
 ## POST /api/bids
 - Accepts form-data
 - Supports file upload
-- Linked to tender_id -->
+- Linked to project_id -->
 
 # Database Schema
 
@@ -39,7 +39,7 @@ The development database uses SQLite.
 - hashed_password
 - role
 
-### tenders
+### projects
 - id
 - title
 - description
@@ -51,7 +51,7 @@ The development database uses SQLite.
 
 ### bids
 - id
-- tender_id (FK)
+- project_id (FK)
 - vendor_id (FK)
 - amount
 - quotation_url
@@ -66,7 +66,7 @@ The development database uses SQLite.
 
 ### clarifications
 - id
-- tender_id
+- project_id
 - question
 - response
 
@@ -78,7 +78,7 @@ The development database uses SQLite.
 
 ## Relationships
 
-- One Tender → Many Bids
+- One Project → Many Bids
 - One User → Many Audit Logs
-- One Tender → Many Clarifications
+- One Project → Many Clarifications
 - One User → Many Notifications

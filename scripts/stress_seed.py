@@ -13,18 +13,18 @@ def stress_test():
     # Ensure tables exist
     Base.metadata.create_all(bind=engine)
     
-    # Find a hospital
-    hosp = db.query(models.Hospital).first()
+    # Find a organization
+    hosp = db.query(models.Organization).first()
     if not hosp:
-        print("❌ No hospitals found. Run seed.py first.")
+        print("❌ No organizations found. Run seed.py first.")
         return
 
-    # Seed 1000 Tenders
-    print("  - Seeding 1,000 Tenders...")
+    # Seed 1000 Projects
+    print("  - Seeding 1,000 Projects...")
     for i in range(1000):
-        t = models.Tender(
-            hospital_id=hosp.id,
-            title=f"Stress Test Tender #{i}",
+        t = models.Project(
+            organization_id=hosp.id,
+            title=f"Stress Test Project #{i}",
             category=random.choice(["Equipment", "Drugs", "Services", "IT"]),
             budget=random.uniform(100000, 10000000),
             status="open",
@@ -34,7 +34,7 @@ def stress_test():
         db.add(t)
         if i % 200 == 0:
             db.commit()
-            print(f"    ... {i} tenders seeded")
+            print(f"    ... {i} projects seeded")
     db.commit()
 
     print("✅ Stress test seeding complete!")

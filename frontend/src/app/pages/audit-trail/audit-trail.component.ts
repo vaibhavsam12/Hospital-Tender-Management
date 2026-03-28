@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
+import { environment } from '../../../environments/environment';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { HttpClient } from '@angular/common/http';
 
@@ -101,7 +102,7 @@ export class AuditTrailComponent implements OnInit {
   }
 
   loadLogs() {
-    this.http.get<AuditLog[]>('http://127.0.0.1:8000/audit/').subscribe({
+    this.http.get<AuditLog[]>(`${environment.apiUrl}/audit/`).subscribe({
       next: (res) => {
         console.log('Logs loaded:', res);
         this.logs = res;

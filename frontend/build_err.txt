@@ -1,0 +1,154 @@
+- Building...
+
+Initial chunk files   | Names                    |  Raw size | Estimated transfer size
+chunk-XY3LMTZV.js     | -                        | 276.00 kB |                75.72 kB
+main-23TLPKWN.js      | main                     |  79.30 kB |                20.77 kB
+chunk-LARJN3U2.js     | -                        |  67.30 kB |                16.63 kB
+chunk-WG3NIFSV.js     | -                        |  36.98 kB |                 4.18 kB
+polyfills-FFHMD2TL.js | polyfills                |  33.71 kB |                11.02 kB
+styles-65ISZ72S.css   | styles                   |  15.17 kB |                 1.78 kB
+chunk-EJJBCPAK.js     | -                        |   4.15 kB |                 1.04 kB
+chunk-WYZS76XV.js     | -                        |   1.48 kB |               676 bytes
+chunk-PNIKSUXR.js     | -                        |   1.19 kB |               521 bytes
+
+                      | Initial total            | 515.30 kB |               132.29 kB
+
+Lazy chunk files      | Names                    |  Raw size | Estimated transfer size
+chunk-4WZFRA4N.js     | project-detail-component | 405.65 kB |               111.00 kB
+chunk-FLF3O6PD.js     | -                        | 200.03 kB |                59.75 kB
+chunk-THJL34TE.js     | html2canvas              | 198.36 kB |                37.63 kB
+chunk-GKFMX3ZE.js     | index-es                 | 155.68 kB |                46.00 kB
+chunk-F57E4LHX.js     | projects-component       |  84.80 kB |                18.94 kB
+chunk-PMIBJ2UC.js     | -                        |  74.18 kB |                10.00 kB
+chunk-Q7HGL3BL.js     | -                        |  43.21 kB |                 9.46 kB
+chunk-PXNJV7P2.js     | my-bids-component        |  42.11 kB |                 7.26 kB
+chunk-3HXSPV4E.js     | -                        |  38.92 kB |                 8.13 kB
+chunk-BLHAAPHE.js     | -                        |  35.74 kB |                 7.42 kB
+chunk-5NLG4QEV.js     | purify                   |  21.55 kB |                 7.68 kB
+chunk-YOTSI33W.js     | -                        |  14.69 kB |                 4.05 kB
+chunk-PEKRGAPU.js     | dashboard-component      |  10.26 kB |                 3.02 kB
+chunk-LP3CTHPZ.js     | login-component          |   8.71 kB |                 2.52 kB
+chunk-OANHWD3E.js     | analytics-component      |   7.65 kB |                 2.38 kB
+...and 4 more lazy chunks files. Use "--verbose" to show all the files.
+
+Output location: C:\Users\Vaibhav Palve\Desktop\Health Care\frontend\dist\frontend
+
+Application bundle generation complete. [21.217 seconds]
+
+▲ [WARNING] bundle initial exceeded maximum budget. Budget 500.00 kB was not met by 15.30 kB with a total of 515.30 kB.
+
+
+▲ [WARNING] Module 'core-js/modules/es.promise.js' used by 'node_modules/canvg/lib/index.es.js' is not ESM
+
+  CommonJS or AMD dependencies can cause optimization bailouts.
+  For more information see: https://angular.io/guide/build#configuring-commonjs-dependencies
+
+
+▲ [WARNING] Module 'core-js/modules/es.string.match.js' used by 'node_modules/canvg/lib/index.es.js' is not ESM
+
+  CommonJS or AMD dependencies can cause optimization bailouts.
+  For more information see: https://angular.io/guide/build#configuring-commonjs-dependencies
+
+
+▲ [WARNING] Module 'core-js/modules/es.string.replace.js' used by 'node_modules/canvg/lib/index.es.js' is not ESM
+
+  CommonJS or AMD dependencies can cause optimization bailouts.
+  For more information see: https://angular.io/guide/build#configuring-commonjs-dependencies
+
+
+▲ [WARNING] Module 'core-js/modules/es.string.starts-with.js' used by 'node_modules/canvg/lib/index.es.js' is not ESM
+
+  CommonJS or AMD dependencies can cause optimization bailouts.
+  For more information see: https://angular.io/guide/build#configuring-commonjs-dependencies
+
+
+▲ [WARNING] Module 'core-js/modules/es.array.iterator.js' used by 'node_modules/canvg/lib/index.es.js' is not ESM
+
+  CommonJS or AMD dependencies can cause optimization bailouts.
+  For more information see: https://angular.io/guide/build#configuring-commonjs-dependencies
+
+
+▲ [WARNING] Module 'core-js/modules/web.dom-collections.iterator.js' used by 'node_modules/canvg/lib/index.es.js' is not ESM
+
+  CommonJS or AMD dependencies can cause optimization bailouts.
+  For more information see: https://angular.io/guide/build#configuring-commonjs-dependencies
+
+
+▲ [WARNING] Module 'core-js/modules/es.array.reduce.js' used by 'node_modules/canvg/lib/index.es.js' is not ESM
+
+  CommonJS or AMD dependencies can cause optimization bailouts.
+  For more information see: https://angular.io/guide/build#configuring-commonjs-dependencies
+
+
+▲ [WARNING] Module 'core-js/modules/es.string.ends-with.js' used by 'node_modules/canvg/lib/index.es.js' is not ESM
+
+  CommonJS or AMD dependencies can cause optimization bailouts.
+  For more information see: https://angular.io/guide/build#configuring-commonjs-dependencies
+
+
+▲ [WARNING] Module 'core-js/modules/es.string.split.js' used by 'node_modules/canvg/lib/index.es.js' is not ESM
+
+  CommonJS or AMD dependencies can cause optimization bailouts.
+  For more information see: https://angular.io/guide/build#configuring-commonjs-dependencies
+
+
+▲ [WARNING] Module 'raf' used by 'node_modules/canvg/lib/index.es.js' is not ESM
+
+  CommonJS or AMD dependencies can cause optimization bailouts.
+  For more information see: https://angular.io/guide/build#configuring-commonjs-dependencies
+
+
+▲ [WARNING] Module 'core-js/modules/es.string.trim.js' used by 'node_modules/canvg/lib/index.es.js' is not ESM
+
+  CommonJS or AMD dependencies can cause optimization bailouts.
+  For more information see: https://angular.io/guide/build#configuring-commonjs-dependencies
+
+
+▲ [WARNING] Module 'rgbcolor' used by 'node_modules/canvg/lib/index.es.js' is not ESM
+
+  CommonJS or AMD dependencies can cause optimization bailouts.
+  For more information see: https://angular.io/guide/build#configuring-commonjs-dependencies
+
+
+▲ [WARNING] Module 'core-js/modules/es.array.index-of.js' used by 'node_modules/canvg/lib/index.es.js' is not ESM
+
+  CommonJS or AMD dependencies can cause optimization bailouts.
+  For more information see: https://angular.io/guide/build#configuring-commonjs-dependencies
+
+
+▲ [WARNING] Module 'core-js/modules/es.string.includes.js' used by 'node_modules/canvg/lib/index.es.js' is not ESM
+
+  CommonJS or AMD dependencies can cause optimization bailouts.
+  For more information see: https://angular.io/guide/build#configuring-commonjs-dependencies
+
+
+▲ [WARNING] Module 'core-js/modules/es.array.reverse.js' used by 'node_modules/canvg/lib/index.es.js' is not ESM
+
+  CommonJS or AMD dependencies can cause optimization bailouts.
+  For more information see: https://angular.io/guide/build#configuring-commonjs-dependencies
+
+
+▲ [WARNING] Module 'core-js/modules/es.regexp.to-string.js' used by 'node_modules/canvg/lib/index.es.js' is not ESM
+
+  CommonJS or AMD dependencies can cause optimization bailouts.
+  For more information see: https://angular.io/guide/build#configuring-commonjs-dependencies
+
+
+▲ [WARNING] Module 'jspdf-autotable' used by 'src/app/pages/project-detail/project-detail.component.ts' is not ESM
+
+  CommonJS or AMD dependencies can cause optimization bailouts.
+  For more information see: https://angular.io/guide/build#configuring-commonjs-dependencies
+
+
+▲ [WARNING] Module 'html2canvas' used by 'node_modules/jspdf/dist/jspdf.es.min.js' is not ESM
+
+  CommonJS or AMD dependencies can cause optimization bailouts.
+  For more information see: https://angular.io/guide/build#configuring-commonjs-dependencies
+
+
+▲ [WARNING] Module 'dompurify' used by 'node_modules/jspdf/dist/jspdf.es.min.js' is not ESM
+
+  CommonJS or AMD dependencies can cause optimization bailouts.
+  For more information see: https://angular.io/guide/build#configuring-commonjs-dependencies
+
+

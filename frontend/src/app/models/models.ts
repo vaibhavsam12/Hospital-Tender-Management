@@ -1,8 +1,16 @@
+export interface Organization {
+  id: number;
+  slug: string;
+  display_name: string;
+  is_active: boolean;
+}
+
 export interface Hospital {
   id: number;
   name: string;
   location: string;
   type: string;
+  organization_id: number;
 }
 
 export interface Bid {
@@ -27,6 +35,7 @@ export interface Tender {
   created_at: string;
   description: string;
   hospital?: Hospital;
+  organization_id: number;
   bids?: Bid[];
   bid_count?: number;
 }
@@ -43,6 +52,8 @@ export interface User {
   full_name?: string;
   role: 'admin' | 'officer' | 'finance' | 'vendor' | 'viewer';
   is_active: boolean;
+  organization_id?: number;
+  organization?: Organization;
   last_login?: string;
 }
 
@@ -77,7 +88,17 @@ export interface Notification {
   message: string;
   link?: string;
   is_read: boolean;
+  organization_id?: number;
   created_at: string;
+}
+
+export interface BidPrediction {
+  tender_id: number;
+  predicted_l1_price: number;
+  confidence_score: number;
+  historical_avg: number;
+  market_trend: 'increasing' | 'decreasing' | 'stable';
+  insight_text: string;
 }
 
 export interface Clarification {
@@ -87,6 +108,16 @@ export interface Clarification {
   asker_name: string;
   question: string;
   answer?: string;
+  organization_id?: number;
   created_at: string;
   answered_at?: string;
+}
+
+export interface Setting {
+    id: number;
+    key: string;
+    value: string;
+    description: string;
+    group: string;
+    organization_id?: number;
 }

@@ -1,17 +1,17 @@
-# 🏥 Hospital Tender Management Platform
+# 🏥 Organization Project Management Platform
 
-A role-based healthcare procurement management system designed to digitize hospital tender workflows, vendor coordination, and procurement analytics.
+A role-based healthcare procurement management system designed to digitize organization project workflows, vendor coordination, and procurement analytics.
 
-The platform centralizes tender lifecycle management and aims to evolve into a data-driven procurement intelligence system.
+The platform centralizes project lifecycle management and aims to evolve into a data-driven procurement intelligence system.
 
 ---
 
 ## 🚀 Vision
 
-Hospitals often manage procurement using fragmented systems or manual processes.  
+Organizations often manage procurement using fragmented systems or manual processes.  
 This platform provides a structured, secure, and scalable solution to:
 
-- Manage tenders end-to-end
+- Manage projects end-to-end
 - Coordinate vendor bidding
 - Compare bids intelligently
 - Track procurement analytics
@@ -28,8 +28,8 @@ Long-term goal: Build an intelligent procurement platform powered by analytics a
 - Role-Based Access Control (Admin / Vendor / Finance)
 - Protected frontend routes and backend endpoints
 
-### 📄 Tender Lifecycle Management
-- Create, update, and publish tenders
+### 📄 Project Lifecycle Management
+- Create, update, and publish projects
 - Status tracking (Draft, Open, Closed, Awarded)
 - Multi-stage workflow handling
 
@@ -41,7 +41,7 @@ Long-term goal: Build an intelligent procurement platform powered by analytics a
 
 ### 📊 Analytics Dashboard
 - Budget distribution by category
-- Tender status insights
+- Project status insights
 - Vendor performance overview
 - Procurement trend visualization
 
@@ -80,7 +80,7 @@ Long-term goal: Build an intelligent procurement platform powered by analytics a
 ---
 
 ## 📂 Project Structure
-Hospital-Tender-Management/
+Organization-Project-Management/
 │
 ├── backend/ # API layer, authentication, models, business logic
 ├── frontend/ # Angular application
@@ -96,7 +96,7 @@ Hospital-Tender-Management/
 
 ```bash
 git clone <your-repo-url>
-cd Hospital-Tender-Management
+cd Organization-Project-Management
 
 2️⃣ Backend Setup
 cd backend

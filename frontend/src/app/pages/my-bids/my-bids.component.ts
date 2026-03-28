@@ -6,6 +6,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
 import { BidService } from '../../core/services/bid.service';
 import { AuthService } from '../../core/services/auth.service';
+import { environment } from '../../../environments/environment';
 import { Bid } from '../../models/models';
 
 @Component({
@@ -25,7 +26,7 @@ import { Bid } from '../../models/models';
         <table mat-table [dataSource]="myBids">
           <ng-container matColumnDef="tender">
             <th mat-header-cell *matHeaderCellDef>Tender</th>
-            <td mat-cell *matCellDef="let bid">{{ bid.tender_title || 'Tender #' + bid.tender_id }}</td>
+            <td mat-cell *matCellDef="let bid">{{ bid.tender?.title || 'Tender #' + bid.tender_id }}</td>
           </ng-container>
 
           <ng-container matColumnDef="amount">
@@ -52,7 +53,7 @@ import { Bid } from '../../models/models';
           <ng-container matColumnDef="quotation">
             <th mat-header-cell *matHeaderCellDef>Quotation</th>
             <td mat-cell *matCellDef="let bid">
-              <a *ngIf="bid.quotation_url" [href]="'http://127.0.0.1:8000' + bid.quotation_url" target="_blank" mat-icon-button color="accent">
+              <a *ngIf="bid.quotation_url" [href]="environment.apiUrl + bid.quotation_url" target="_blank" mat-icon-button color="accent">
                 <mat-icon>file_download</mat-icon>
               </a>
               <span *ngIf="!bid.quotation_url" class="no-file">No file</span>

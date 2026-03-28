@@ -1,68 +1,51 @@
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel
+from typing import List, Optional
 from datetime import datetime
-from typing import Optional, List, Annotated
+
+# ---- Organization ----
+class OrganizationBase(BaseModel):
+    slug: str
+    display_name: str
+    is_active: bool = True
+
+class OrganizationCreate(OrganizationBase):
+    pass
+
+class OrganizationOut(OrganizationBase):
+    id: int
+    created_at: datetime
+    class Config:
+        from_attributes = True
 
 
 # ---- Hospital ----
 class HospitalBase(BaseModel):
     name: str
     location: Optional[str] = None
-    type: Optional[str] = None
-
+    type: Optional[str] = None # Government / Private / Trust
 
 class HospitalCreate(HospitalBase):
     pass
 
-
 class HospitalOut(HospitalBase):
     id: int
-
-    class Config:
-        from_attributes = True
-
-
-# ---- Bid ----
-class BidBase(BaseModel):
-    tender_id: int
-    user_id: Optional[int] = None # Link to vendor user
-    vendor_name: str
-    amount: float = Field(..., gt=0)
-    notes: Optional[str] = ""
-
-
-class BidCreate(BidBase):
-    pass
-
-
-class BidUpdate(BaseModel):
-    won: Optional[bool] = None
-    amount: Optional[float] = None
-    notes: Optional[str] = None
-
-
-class BidOut(BidBase):
-    id: int
-    submitted_at: datetime
-    won: bool
-
+    organization_id: int
     class Config:
         from_attributes = True
 
 
 # ---- Tender ----
 class TenderBase(BaseModel):
-    hospital_id: int
     title: str
-    category: Optional[str] = None
-    budget: float = Field(0.0, ge=0)
-    status: Optional[str] = "open"
+    category: Optional[str] = None # Equipment / Drugs / Services / IT
+    budget: float = 0.0
+    status: str = "open" # open / closed / awarded
     deadline: Optional[datetime] = None
     description: Optional[str] = ""
 
-
 class TenderCreate(TenderBase):
-    pass
-
+    organization_id: int
+    hospital_id: int
 
 class TenderUpdate(BaseModel):
     title: Optional[str] = None
@@ -72,51 +55,41 @@ class TenderUpdate(BaseModel):
     deadline: Optional[datetime] = None
     description: Optional[str] = None
 
-
 class TenderOut(TenderBase):
     id: int
+    organization_id: int
+    hospital_id: int
     created_at: datetime
     hospital: Optional[HospitalOut] = None
-    bids: List[BidOut] = []
-
+    
     class Config:
         from_attributes = True
 
 
-class TenderList(TenderBase):
+# ---- Bid ----
+class BidBase(BaseModel):
+    tender_id: int
+    vendor_name: str
+    amount: float
+    notes: Optional[str] = ""
+
+class BidCreate(BidBase):
+    user_id: Optional[int] = None
+
+class BidUpdate(BaseModel):
+    amount: Optional[float] = None
+    notes: Optional[str] = None
+    won: Optional[bool] = None
+
+class BidOut(BidBase):
     id: int
-    created_at: datetime
-    hospital: Optional[HospitalOut] = None
-    bid_count: int = 0
-
+    user_id: Optional[int] = None
+    submitted_at: datetime
+    won: bool
+    quotation_url: Optional[str] = None
+    tender: Optional[TenderOut] = None 
     class Config:
         from_attributes = True
-
-
-# ---- Analytics ----
-class CategoryStat(BaseModel):
-    category: str
-    count: int
-    total_budget: float
-
-
-class AnalyticsSummary(BaseModel):
-    total_tenders: int
-    active_tenders: int
-    awarded_tenders: int
-    closed_tenders: int
-    total_budget: float
-    total_bids: int
-    avg_bids_per_tender: float
-    by_category: List[CategoryStat]
-
-
-class VendorStats(BaseModel):
-    total_bids: int
-    won_bids: int
-    win_rate: float
-    total_bid_value: float
-    active_bids: int
 
 
 # ---- User & Auth ----
@@ -125,30 +98,16 @@ class UserBase(BaseModel):
     full_name: Optional[str] = None
     role: str = "viewer"
 
-
 class UserCreate(UserBase):
+    organization_id: Optional[int] = None
     password: str
-
 
 class UserOut(UserBase):
     id: int
+    organization_id: Optional[int] = None
     is_active: bool
-    last_login: Optional[datetime] = None
-
-    class Config:
-        from_attributes = True
-
-
-# ---- Audit Log ----
-class AuditLogOut(BaseModel):
-    id: int
-    user_id: int
-    action: str
-    table_name: str
-    record_id: Optional[int] = None
-    timestamp: datetime
-    details: Optional[str] = None
-
+    organization: Optional[OrganizationOut] = None
+    
     class Config:
         from_attributes = True
 
@@ -156,50 +115,143 @@ class Token(BaseModel):
     access_token: str
     token_type: str
 
-
 class TokenData(BaseModel):
     email: Optional[str] = None
-    role: Optional[str] = None
+    org_id: Optional[int] = None
 
 
-# ---- Notification ----
-class NotificationBase(BaseModel):
-    title: str
-    message: str
-    link: Optional[str] = None
-
-
-class NotificationOut(NotificationBase):
+# ---- Audit Log ----
+class AuditLogOut(BaseModel):
     id: int
-    user_id: int
-    is_read: bool
-    created_at: datetime
-
+    organization_id: Optional[int]
+    user_id: Optional[int]
+    action: str
+    table_name: Optional[str]
+    record_id: Optional[int]
+    timestamp: datetime
+    details: Optional[str]
     class Config:
         from_attributes = True
 
 
-# ---- Clarification ----
-class ClarificationBase(BaseModel):
+# ---- Analytics ----
+class CategoryBudget(BaseModel):
+    category: str
+    count: int
+    total_budget: float
+
+class AnalyticsSummary(BaseModel):
+    total_tenders: int 
+    active_tenders: int
+    awarded_tenders: int
+    closed_tenders: int
+    total_budget: float
+    total_bids: int
+    avg_bids_per_tender: float
+    by_category: List[CategoryBudget]
+
+class VendorStats(BaseModel):
+    total_bids: int
+    won_bids: int
+    active_bids: int
+    win_rate: float
+    total_bid_value: float
+
+class BidPredictionOut(BaseModel):
     tender_id: int
+    predicted_l1_price: float
+    confidence_score: float # 0 to 1
+    historical_avg: float
+    market_trend: str # increasing / decreasing / stable
+    insight_text: str
+
+
+# ---- Notifications ----
+class NotificationOut(BaseModel):
+    id: int
+    organization_id: Optional[int]
+    title: str
+    message: str
+    link: Optional[str]
+    is_read: bool
+    created_at: datetime
+    class Config:
+        from_attributes = True
+
+
+# ---- Clarifications ----
+class ClarificationBase(BaseModel):
     question: str
 
-
 class ClarificationCreate(ClarificationBase):
-    pass
-
+    tender_id: int
+    asker_name: str
 
 class ClarificationAnswer(BaseModel):
     answer: str
 
-
 class ClarificationOut(ClarificationBase):
     id: int
+    organization_id: Optional[int]
+    tender_id: int
     user_id: int
     asker_name: str
-    answer: Optional[str] = None
+    answer: Optional[str]
     created_at: datetime
-    answered_at: Optional[datetime] = None
+    answered_at: Optional[datetime]
+    class Config:
+        from_attributes = True
 
+# ---- Settings ----
+class SettingBase(BaseModel):
+    key: str
+    value: Optional[str] = None
+    description: Optional[str] = None
+    group: str
+
+class SettingUpdate(BaseModel):
+    value: str
+
+class SettingOut(SettingBase):
+    id: int
+    organization_id: Optional[int]
+    class Config:
+        from_attributes = True
+
+class SettingBulkUpdate(BaseModel):
+    settings: List[dict] # List of {"key": "...", "value": "..."}
+
+# ---- Billing ----
+class PlanOut(BaseModel):
+    id: int
+    name: str
+    price: float
+    features: Optional[str]
+    class Config:
+        from_attributes = True
+
+class SubscriptionOut(BaseModel):
+    id: int
+    organization_id: int
+    plan_id: int
+    status: str
+    current_period_end: Optional[datetime]
+    plan: Optional[PlanOut]
+    class Config:
+        from_attributes = True
+
+class TransactionCreate(BaseModel):
+    amount: float
+    type: str # subscription / bid_fee
+    org_id: Optional[int] = None
+
+class TransactionOut(BaseModel):
+    id: int
+    amount: float
+    currency: str
+    status: str
+    type: str
+    razorpay_order_id: Optional[str]
+    created_at: datetime
     class Config:
         from_attributes = True

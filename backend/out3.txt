@@ -1,0 +1,9 @@
+Traceback (most recent call last):
+  File "C:\Users\Vaibhav Palve\Desktop\Health Care\backend\test_imports.py", line 1, in <module>
+    import main
+  File "C:\Users\Vaibhav Palve\Desktop\Health Care\backend\main.py", line 12, in <module>
+    from routers import organizations, projects, bids, analytics, auth, audit, notifications, clarifications, settings, payments
+  File "C:\Users\Vaibhav Palve\Desktop\Health Care\backend\routers\auth.py", line 33, in <module>
+    def read_users_me(current_user: schemas.UserOut = Depends(auth_utils.get_current_active_user)):
+                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'auth_utils' has no attribute 'get_current_active_user'. Did you mean: 'get_current_user'?

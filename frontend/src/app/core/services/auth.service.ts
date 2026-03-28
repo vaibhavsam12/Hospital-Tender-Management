@@ -2,11 +2,12 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap, switchMap } from 'rxjs';
 import { User, AuthResponse } from '../../models/models';
+import { environment } from '../../../environments/environment';
 import { Router } from '@angular/router';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-    private apiUrl = 'http://127.0.0.1:8000/auth';
+    private apiUrl = `${environment.apiUrl}/auth`;
     private currentUserSubject = new BehaviorSubject<User | null>(null);
     public currentUser$ = this.currentUserSubject.asObservable();
 
@@ -28,9 +29,15 @@ export class AuthService {
     }
 
     login(credentials: HttpParams): Observable<User> {
-        return this.http.post<AuthResponse>(`${this.apiUrl}/login`, credentials, {
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-        }).pipe(
+        // FastAPI OAuth2PasswordRequestForm expects 'username' and 'password'
+        const username = credentials.get('username') || credentials.get('email') || '';
+        const password = credentials.get('password') || '';
+
+        const body = new HttpParams()
+            .set('username', username)
+            .set('password', password);
+        
+        return this.http.post<AuthResponse>(`${this.apiUrl}/token`, body).pipe(
             switchMap(res => {
                 localStorage.setItem('token', res.access_token);
                 return this.fetchMe();

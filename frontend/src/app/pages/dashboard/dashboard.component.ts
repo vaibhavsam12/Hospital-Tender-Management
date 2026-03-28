@@ -16,9 +16,9 @@ Chart.register(...registerables);
   template: `
     <div class="page-header" *ngIf="auth.currentUser$ | async as user">
       <div class="welcome-section">
-        <span class="welcome-text">Welcome back,</span>
+        <span class="welcome-label">Enterprise Platform</span>
         <h1>{{ user.full_name }}</h1>
-        <p>Hospital Procurement Overview · {{ today }}</p>
+        <p class="org-context" *ngIf="user.organization">{{ user.organization.display_name }} · {{ today }}</p>
       </div>
     </div>
     <div class="page-body">
@@ -137,16 +137,22 @@ Chart.register(...registerables);
     .view-link { color: var(--accent); text-decoration: none; font-size: 13px; font-weight: 500; }
     .view-link:hover { text-decoration: underline; }
     .welcome-section {
-      h1 { font-size: 32px; margin: 4px 0; font-weight: 700; color: #fff; }
-      .welcome-text { font-size: 14px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 500; }
+      h1 { font-size: 36px; margin: 4px 0; font-weight: 800; color: #fff; letter-spacing: -1px; }
+      .welcome-label { font-size: 11px; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; font-weight: 700; background: rgba(0, 212, 255, 0.1); padding: 4px 12px; border-radius: 20px; }
+      .org-context { font-size: 14px; color: var(--text-secondary); margin-top: 8px; }
     }
     .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 24px; }
-    .kpi-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 20px; display: flex; align-items: center; gap: 16px; transition: transform 0.2s; }
-    .kpi-card:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.1); }
-    .kpi-icon { width: 48px; height: 48px; border-radius: 12px; background: rgba(0, 212, 255, 0.1); display: flex; align-items: center; justify-content: center; color: var(--accent); }
+    .kpi-card { 
+      background: rgba(255, 255, 255, 0.03); 
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.08); 
+      border-radius: 16px; padding: 24px; display: flex; align-items: center; gap: 20px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+      &:hover { transform: translateY(-4px); border-color: var(--accent); background: rgba(255, 255, 255, 0.05); }
+    }
+    .kpi-icon { width: 56px; height: 56px; border-radius: 14px; background: linear-gradient(135deg, rgba(0, 212, 255, 0.2) 0%, rgba(124, 58, 237, 0.2) 100%); display: flex; align-items: center; justify-content: center; color: #fff; }
     .kpi-info { display: flex; flex-direction: column; }
-    .kpi-label { font-size: 13px; color: var(--text-secondary); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
-    .kpi-value { font-size: 24px; font-weight: 700; color: #fff; }
+    .kpi-label { font-size: 11px; color: var(--text-secondary); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    .kpi-value { font-size: 28px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
     .vendor-banner {
       background: linear-gradient(90deg, rgba(0,212,255,0.1) 0%, rgba(124,58,237,0.05) 100%);
       border: 1px solid rgba(0,212,255,0.15); border-radius: 16px; margin-bottom: 24px; overflow: hidden;

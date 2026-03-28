@@ -5,6 +5,7 @@ import crud
 import schemas
 import auth_utils
 from database import get_db
+import models # Added this import as models.User is used
 
 router = APIRouter(prefix="/notifications", tags=["Notifications"])
 
@@ -12,9 +13,9 @@ router = APIRouter(prefix="/notifications", tags=["Notifications"])
 @router.get("/", response_model=List[schemas.NotificationOut])
 def get_my_notifications(
     db: Session = Depends(get_db),
-    current_user=Depends(auth_utils.get_current_user)
+    current_user: models.User = Depends(auth_utils.get_current_user)
 ):
-    return crud.get_notifications(db, user_id=current_user.id)
+    return crud.get_notifications(db, user_id=current_user.id, org_id=current_user.organization_id)
 
 
 @router.post("/{notification_id}/read", response_model=schemas.NotificationOut)

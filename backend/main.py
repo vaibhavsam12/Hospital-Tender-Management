@@ -9,7 +9,10 @@ import os, sys
 sys.path.append(os.path.dirname(__file__))
 
 import auth_utils
-from routers import hospitals, tenders, bids, analytics, auth, audit, notifications, clarifications
+from routers import (
+    hospitals, tenders, bids, analytics, auth, 
+    audit, notifications, clarifications, settings, billing
+)
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 
@@ -20,11 +23,7 @@ if not os.path.exists("uploads"):
 # Create all tables on startup
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(
-    title="Hospital Tender Dashboard API Pro",
-    version="2.0.0",
-    description="REST API for managing hospital procurement tenders, bids, and audit logs with RBAC.",
-)
+app = FastAPI(title="Hospital Tender Management API")
 
 # app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads") # Secure: replaced by authenticated stream
 
@@ -52,16 +51,18 @@ async def global_exception_handler(request: Request, exc: Exception):
         content={"detail": "An internal server error occurred. Our team has been notified."},
     )
 
-app.include_router(auth.router)
-app.include_router(hospitals.router, dependencies=[Depends(auth_utils.get_current_user)])
-app.include_router(tenders.router, dependencies=[Depends(auth_utils.get_current_user)])
+app.include_router(hospitals.router)
+app.include_router(tenders.router)
 app.include_router(bids.router)
 app.include_router(analytics.router)
 app.include_router(audit.router)
 app.include_router(notifications.router)
 app.include_router(clarifications.router)
+app.include_router(auth.router)
+app.include_router(settings.router)
+app.include_router(billing.router)
 
 
 @app.get("/")
-def root():
-    return {"message": "Hospital Tender Dashboard API", "docs": "/docs"}
+def read_root():
+    return {"message": "Hospital Tender Management API", "docs": "/docs"}

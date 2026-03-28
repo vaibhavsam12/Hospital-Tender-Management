@@ -14,7 +14,7 @@ Frontend (Angular 17)
 - Role-Based Access Control (Admin / Vendor / Finance)
 
 ## Core Modules
-- Tender Management
+- Project Management
 - Bid Submission
 - Audit Logging
 - Notifications
@@ -29,21 +29,21 @@ Local development environment.
 - Multi-tenant support
 - Analytics intelligence layer -->
 
-# Hospital Tender Management Platform
+# Organization Project Management Platform
 
 ## Overview
 
-The Hospital Tender Management Platform is a role-based healthcare procurement system designed to digitize and streamline hospital tender workflows.
+The Organization Project Management Platform is a role-based healthcare procurement system designed to digitize and streamline organization project workflows.
 
-The platform enables hospitals to:
-- Create and manage tenders
+The platform enables organizations to:
+- Create and manage projects
 - Track vendor bids
 - Maintain audit logs
 - Generate procurement analytics
 
 ## Problem Statement
 
-Many hospitals still manage procurement through manual processes or fragmented systems. This leads to:
+Many organizations still manage procurement through manual processes or fragmented systems. This leads to:
 - Poor transparency
 - Vendor performance ambiguity
 - Delayed approvals
@@ -51,7 +51,7 @@ Many hospitals still manage procurement through manual processes or fragmented s
 
 ## Solution
 
-This platform centralizes the full tender lifecycle:
+This platform centralizes the full project lifecycle:
 Draft → Open → Closed → Awarded
 
 It provides:

@@ -24,7 +24,7 @@ import { AuthService } from '../../core/services/auth.service';
           <div class="brand-logo">
             <mat-icon>security</mat-icon>
           </div>
-          <h1>TenderMed Pro</h1>
+          <h1>HealthTender Pro</h1>
           <p>Enterprise Procurement Dashboard</p>
         </div>
 
@@ -77,7 +77,7 @@ import { AuthService } from '../../core/services/auth.service';
         </form>
 
         <div class="login-footer">
-          <p>Don't have access? <a href="mailto:admin@tendermed.pro">Contact Administrator</a></p>
+          <p>Don't have access? <a href="mailto:admin@healthtender.pro">Contact Administrator</a></p>
         </div>
       </div>
     </div>

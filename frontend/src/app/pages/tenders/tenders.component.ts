@@ -135,7 +135,7 @@ import { Tender } from '../../models/models';
       </div>
     </div>
 
-    <!-- New Tender Modal -->
+    <!-- New Project Modal -->
     <div class="modal-overlay" *ngIf="showNewForm" (click)="closeForm()">
       <div class="modal-card glass-card" (click)="$event.stopPropagation()">
         <div class="modal-header">

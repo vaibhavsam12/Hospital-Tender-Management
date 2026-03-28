@@ -2,11 +2,12 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Tender } from '../../models/models';
+import { environment } from '../../../environments/environment';
 
 
 @Injectable({ providedIn: 'root' })
 export class TenderService {
-    private base = 'http://127.0.0.1:8000/tenders';
+    private base = `${environment.apiUrl}/tenders`;
 
     constructor(private http: HttpClient) { }
 
@@ -31,5 +32,9 @@ export class TenderService {
 
     deleteTender(id: number): Observable<any> {
         return this.http.delete(`${this.base}/${id}`);
+    }
+
+    getPrediction(id: number): Observable<any> {
+        return this.http.get<any>(`${this.base}/${id}/predict`);
     }
 }

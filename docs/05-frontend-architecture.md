@@ -11,8 +11,8 @@ models/
 
 pages/
 - dashboard
-- tenders
-- tender-detail
+- projects
+- project-detail
 - my-bids
 - analytics
 - audit-trail
@@ -26,13 +26,13 @@ Each module is a standalone component.
 
 ## Responsibilities
 
-tenders.component
-- Fetch tender data
+projects.component
+- Fetch project data
 - Manage filters
 - Handle pagination
 
-tender-detail.component
-- Show tender details
+project-detail.component
+- Show project details
 - Display bids
 - Manage status updates
 

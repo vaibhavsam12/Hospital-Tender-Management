@@ -1,113 +1,67 @@
-# 🏥 Hospital Tender Management Platform
+# 🏥 HealthTender Pro: Enterprise SaaS Platform
 
-A role-based healthcare procurement management system designed to digitize hospital tender workflows, vendor coordination, and procurement analytics.
-
-The platform centralizes tender lifecycle management and aims to evolve into a data-driven procurement intelligence system.
+HealthTender Pro is a premium, **Multi-Tenant SaaS platform** designed for healthcare procurement. It features an AI-driven L1 prediction engine, role-based multi-tenancy, and a comprehensive monetization layer.
 
 ---
 
-## 🚀 Vision
+## 🚀 Key SaaS Features
 
-Hospitals often manage procurement using fragmented systems or manual processes.  
-This platform provides a structured, secure, and scalable solution to:
+### 🔐 Multi-Tenancy & RBAC
+- **Data Isolation**: Each hospital organization operates in a strictly isolated environment via `organization_id`.
+- **RBAC**: Fine-grained roles including System Admin, Procurement Officer, Finance, and Vendor.
 
-- Manage tenders end-to-end
-- Coordinate vendor bidding
-- Compare bids intelligently
-- Track procurement analytics
-- Maintain audit-ready logs
+### 🤖 AI-Driven Insights
+- **L1 Prediction**: Real-time bid analysis predicts the lowest winning bid (L1) using historical category data.
+- **Confidence Scoring**: Dynamic assessment of prediction reliability.
 
-Long-term goal: Build an intelligent procurement platform powered by analytics and predictive insights.
-
----
-
-## 🧩 Core Features
-
-### 🔐 Authentication & Access Control
-- JWT-based authentication
-- Role-Based Access Control (Admin / Vendor / Finance)
-- Protected frontend routes and backend endpoints
-
-### 📄 Tender Lifecycle Management
-- Create, update, and publish tenders
-- Status tracking (Draft, Open, Closed, Awarded)
-- Multi-stage workflow handling
-
-### 💰 Bid Management
-- Vendor bid submission
-- File upload support
-- L1 (Lowest Bidder) detection
-- Structured bid comparison
-
-### 📊 Analytics Dashboard
-- Budget distribution by category
-- Tender status insights
-- Vendor performance overview
-- Procurement trend visualization
-
-### 🧾 Audit Trail
-- System action logging
-- User-based activity tracking
-- Compliance-friendly logs
-
-### 🔎 Filtering & Pagination
-- API-driven filtering
-- Search functionality
-- Category & status filters
-- Pagination support
+### 💰 Monetization
+- **Subscription Tiers**: Support for Free, Pro, and Enterprise billing plans.
+- **Billing History**: Tracking for transactions and subscription lifecycle.
 
 ---
 
 ## 🏗 Tech Stack
 
 ### Frontend
-- Angular 17 (Standalone Components)
-- Angular Material
-- Responsive UI architecture
-- Modular component design
+- **Angular 17** (Standalone Architecture)
+- **Angular Material** (Premium Glassmorphic UI)
+- **Chart.js** (Procurement Analytics)
 
 ### Backend
-- REST API architecture
-- JWT Authentication
-- Role-based middleware
-- File upload handling
-- Audit logging layer
-
-### Database
-- Relational SQL schema
-- Optimized queries for filtering and pagination
-
----
-
-## 📂 Project Structure
-Hospital-Tender-Management/
-│
-├── backend/ # API layer, authentication, models, business logic
-├── frontend/ # Angular application
-├── scripts/ # Utility scripts
-└── README.md
-
+- **FastAPI** (Python)
+- **PostgreSQL** (Production-ready relational DB)
+- **SQLAlchemy ORM**
+- **Alembic** (Migration Management)
 
 ---
 
 ## 🛠 Development Setup
 
-### 1️⃣ Clone the Repository
+### 1️⃣ Environment Configuration
+Create a `.env` file in the `backend/` directory:
+```env
+DB_USER=postgres
+DB_PASSWORD=your_password
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=health_tender_pro
+```
 
+### 2️⃣ Backend Setup
 ```bash
-git clone <your-repo-url>
-cd Hospital-Tender-Management
-
-2️⃣ Backend Setup
 cd backend
-# Install dependencies
-# Configure environment variables
-# Start backend server
+pip install -r requirements.txt
+python seed.py # Populates demo data
+uvicorn main:app --reload
+```
 
-3️⃣ Frontend Setup
+### 3️⃣ Frontend Setup
+```bash
 cd frontend
 npm install
-ng serve
+npm start
+```
+Frontend runs at: **http://localhost:4200**
 
-Frontend runs at:
-http://localhost:4200
+---
+*Architected for a ₹10 Lakh+ market valuation.*

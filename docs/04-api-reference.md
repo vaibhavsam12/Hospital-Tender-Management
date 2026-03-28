@@ -7,12 +7,12 @@ POST /auth/register
 
 ---
 
-## Tenders
+## Projects
 
-GET /tenders  
-POST /tenders  
-PUT /tenders/{id}  
-GET /tenders/{id}  
+GET /projects  
+POST /projects  
+PUT /projects/{id}  
+GET /projects/{id}  
 
 Supports filtering:
 - page
@@ -26,7 +26,7 @@ Supports filtering:
 ## Bids
 
 POST /bids  
-GET /bids/tender/{tender_id}  
+GET /bids/project/{project_id}  
 
 ---
 

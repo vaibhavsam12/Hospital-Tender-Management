@@ -5,10 +5,10 @@
 User → Login → JWT Issued → Authorized API Access
 
 Admin:
-Create Tender → Status Management → View Bids → Award
+Create Project → Status Management → View Bids → Award
 
 Vendor:
-View Open Tenders → Submit Bid → Track Status
+View Open Projects → Submit Bid → Track Status
 
 System:
 Log actions → Store audit trail → Generate analytics -->
@@ -40,7 +40,7 @@ auth_utils.py
 
 routers/
 - auth.py
-- tenders.py
+- projects.py
 - bids.py
 - audit.py
 - notifications.py

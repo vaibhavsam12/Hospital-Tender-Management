@@ -1,4 +1,4 @@
-# Tender Catalog Enhancement Scope
+# Project Catalog Enhancement Scope
 
 ## Current Implementation
 

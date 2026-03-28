@@ -8,9 +8,10 @@ import { TenderService } from '../../core/services/tender.service';
 import { BidService } from '../../core/services/bid.service';
 import { ClarificationService } from '../../core/services/clarification.service';
 import { AuthService } from '../../core/services/auth.service';
-import { Tender, Bid, Clarification } from '../../models/models';
+import { Tender, Bid, Clarification, BidPrediction } from '../../models/models';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-tender-detail',
@@ -18,67 +19,116 @@ import autoTable from 'jspdf-autotable';
   imports: [CommonModule, FormsModule, RouterLink, MatIconModule, MatSnackBarModule],
   template: `
     <div class="page-header">
-      <div style="display:flex; justify-content:space-between; align-items:flex-end; width:100%">
-        <div>
+      <div class="header-inner">
+        <div class="title-section">
           <a routerLink="/tenders" class="back-link"><mat-icon>arrow_back</mat-icon> All Tenders</a>
           <h1 *ngIf="tender">{{ tender.title }}</h1>
           <p *ngIf="tender">{{ tender.hospital?.name }} · {{ tender.category }}</p>
         </div>
-        <button class="export-btn" (click)="exportPDF()" *ngIf="tender && bids.length > 0">
-          <mat-icon>picture_as_pdf</mat-icon>
-          Export Report
-        </button>
+        <div class="action-buttons">
+          <button class="export-btn csv" (click)="exportCSV()" *ngIf="tender && bids.length > 0">
+            <mat-icon>table_view</mat-icon>
+            <span>Export CSV</span>
+          </button>
+          <button class="export-btn" (click)="exportPDF()" *ngIf="tender && bids.length > 0">
+            <mat-icon>picture_as_pdf</mat-icon>
+            <span>Export PDF</span>
+          </button>
+        </div>
       </div>
     </div>
     <div class="page-body" *ngIf="tender">
 
-      <!-- Tender Info -->
-      <div class="detail-grid">
-        <div class="card detail-card">
-          <div class="info-row">
-            <div class="info-item">
-              <span class="info-label">Status </span>
-              <span class="status-chip" [ngClass]="tender.status"> {{ tender.status | titlecase }}</span>
+      <!-- Details & Actions -->
+      <div class="detail-container">
+        <div class="main-info">
+          <div class="card detail-card">
+            <div class="info-row">
+              <div class="info-item">
+                <span class="info-label">Status </span>
+                <span class="status-chip" [ngClass]="tender.status"> {{ tender.status | titlecase }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Budget</span>
+                <span class="info-value big"> ₹{{ formatLakh(tender.budget) }} Lakhs</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Deadline</span>
+                <span class="info-value"> {{ tender.deadline ? (tender.deadline | date:'dd MMM yyyy') : 'N/A' }}</span>
+              </div>
             </div>
-            <div class="info-item">
-              <span class="info-label">Budget</span>
-              <span class="info-value big"> ₹{{ formatLakh(tender.budget) }} Lakhs</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Deadline</span>
-              <span class="info-value"> {{ tender.deadline ? (tender.deadline | date:'dd MMM yyyy') : 'N/A' }}</span>
+            <div class="description-section" *ngIf="tender.description">
+              <div class="info-label" style="margin-bottom:8px">Description</div>
+              <p class="description-text"> {{ tender.description }}</p>
             </div>
           </div>
-          <div class="description-section" *ngIf="tender.description">
-            <div class="info-label" style="margin-bottom:8px">Description</div>
-            <p class="description-text"> {{ tender.description }}</p>
+
+          <!-- AI Prediction Card -->
+          <div class="card ai-card glass-card" *ngIf="prediction">
+            <div class="ai-header">
+              <div class="ai-title">
+                <mat-icon class="ai-sparkle">auto_awesome</mat-icon>
+                <span>Predicted L1 Insight</span>
+              </div>
+              <div class="conf-badge" [class.high]="prediction.confidence_score > 0.8" [class.med]="prediction.confidence_score <= 0.8">
+                 {{ prediction.confidence_score * 100 | number:'1.0-0' }}% Confidence
+              </div>
+            </div>
+            
+            <div class="ai-body">
+              <div class="pred-price">
+                <div class="label">Estimated Winning Bid</div>
+                <div class="value">₹{{ formatLakh(prediction.predicted_l1_price) }} Lakhs</div>
+              </div>
+              
+              <div class="market-stats">
+                <div class="stat">
+                  <span class="label">Historical Avg</span>
+                  <span class="val">₹{{ formatLakh(prediction.historical_avg) }}L</span>
+                </div>
+                <div class="stat">
+                   <span class="label">Trend</span>
+                   <span class="val" [class.trend-down]="prediction.market_trend === 'decreasing'">
+                     <mat-icon>{{ prediction.market_trend === 'decreasing' ? 'trending_down' : 'trending_flat' }}</mat-icon>
+                     {{ prediction.market_trend | titlecase }}
+                   </span>
+                </div>
+              </div>
+
+              <div class="ai-insight">
+                <mat-icon>lightbulb</mat-icon>
+                <p>{{ prediction.insight_text }}</p>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- Bid Submission Form (Only for Vendors) -->
-        <div class="card bid-form-card" *ngIf="tender.status === 'open' && auth.hasRole(['vendor'])">
-          <div class="section-title">Submit a Bid</div>
-          <div class="form-group">
-            <label>Bid Amount (₹)</label>
-            <input type="number" [(ngModel)]="newBid.amount" placeholder="0" />
+        <div class="sidebar-actions">
+          <!-- Bid Submission Form (Only for Vendors) -->
+          <div class="card bid-form-card" *ngIf="tender.status === 'open' && auth.hasRole(['vendor'])">
+            <div class="section-title">Submit a Bid</div>
+            <div class="form-group">
+              <label>Bid Amount (₹)</label>
+              <input type="number" [(ngModel)]="newBid.amount" placeholder="0" />
+            </div>
+            <div class="form-group">
+              <label>Notes</label>
+              <textarea [(ngModel)]="newBid.notes" rows="3" placeholder="Warranty, delivery etc."></textarea>
+            </div>
+            <div class="form-group">
+              <label>Quotation PDF (Optional)</label>
+              <input type="file" (change)="onFileSelected($event)" accept=".pdf,.doc,.docx" />
+            </div>
+            <button class="btn-accent" style="width:100%" (click)="submitBid()" [disabled]="submitting">
+              <mat-icon style="font-size:16px;vertical-align:middle;margin-right:4px">gavel</mat-icon>
+              {{ submitting ? 'Submitting...' : 'Submit Bid' }}
+            </button>
           </div>
-          <div class="form-group">
-            <label>Notes</label>
-            <textarea [(ngModel)]="newBid.notes" rows="3" placeholder="Warranty, delivery etc."></textarea>
-          </div>
-          <div class="form-group">
-            <label>Quotation PDF (Optional)</label>
-            <input type="file" (change)="onFileSelected($event)" accept=".pdf,.doc,.docx" />
-          </div>
-          <button class="btn-accent" style="width:100%" (click)="submitBid()" [disabled]="submitting">
-            <mat-icon style="font-size:16px;vertical-align:middle;margin-right:4px">gavel</mat-icon>
-            {{ submitting ? 'Submitting...' : 'Submit Bid' }}
-          </button>
-        </div>
 
-        <div class="card bid-form-card closed-banner" *ngIf="tender.status !== 'open'">
-          <mat-icon style="font-size:48px;color:var(--text-secondary);margin-bottom:8px">lock</mat-icon>
-          <p>This tender is <strong>{{ tender.status }}</strong>.</p>
+          <div class="card bid-form-card closed-banner" *ngIf="tender.status !== 'open'">
+            <mat-icon style="font-size:48px;color:var(--text-secondary);margin-bottom:8px">lock</mat-icon>
+            <p>This tender is <strong>{{ tender.status }}</strong>.</p>
+          </div>
         </div>
       </div>
 
@@ -94,8 +144,8 @@ import autoTable from 'jspdf-autotable';
       <div class="section-title">
         {{ compareMode ? 'Bid Comparison Engine (L1 Highlighted)' : 'Bid Submissions (' + bids.length + ')' }}
       </div>
-      <div class="card" style="padding:0;overflow:hidden">
-        <table style="width:100%;border-collapse:collapse" id="bids-table">
+      <div class="card overflow-x-auto" style="padding:0; overflow-x: auto;">
+        <table style="width:100%; min-width: 600px; border-collapse:collapse" id="bids-table">
           <thead>
             <tr>
               <th>#</th>
@@ -118,13 +168,13 @@ import autoTable from 'jspdf-autotable';
               </td>
               <td class="amount-cell">₹{{ formatLakh(b.amount) }}L</td>
               <td>
-                <span class="diff-chip" [class.lower]="b.amount < tender.budget" [class.higher]="b.amount >= tender.budget">
-                  {{ b.amount < tender.budget ? '▼' : '▲' }}
-                  {{ ((b.amount - tender.budget) / tender.budget * 100 | number:'1.1-1') }}%
+                <span class="diff-chip" [class.lower]="tender ? b.amount < tender.budget : false" [class.higher]="tender ? b.amount >= tender.budget : false">
+                  {{ tender ? (b.amount < tender.budget ? '▼' : '▲') : '' }}
+                  {{ tender ? ((b.amount - tender.budget) / tender.budget * 100 | number:'1.1-1') : '' }}%
                 </span>
               </td>
               <td *ngIf="!compareMode">
-                <a *ngIf="b.quotation_url" [href]="'http://127.0.0.1:8000' + b.quotation_url" target="_blank" style="color:var(--accent)">
+                <a *ngIf="b.quotation_url" [href]="environment.apiUrl + b.quotation_url" target="_blank" style="color:var(--accent)">
                   <mat-icon style="font-size:18px">file_download</mat-icon>
                 </a>
               </td>
@@ -133,7 +183,7 @@ import autoTable from 'jspdf-autotable';
                 <span *ngIf="!b.won" class="pending-badge">Pending</span>
               </td>
               <td *ngIf="!compareMode">
-                <button *ngIf="!b.won && auth.hasRole(['admin', 'officer']) && tender.status !== 'awarded'" 
+                <button *ngIf="!b.won && auth.hasRole(['admin', 'officer']) && tender?.status !== 'awarded'" 
                         class="mark-winner-btn" 
                         (click)="markWinner(b)"
                         [disabled]="awardingId === b.id">
@@ -185,9 +235,9 @@ import autoTable from 'jspdf-autotable';
         <div class="ask-section" *ngIf="auth.hasRole(['vendor']) && tender.status === 'open'">
           <hr style="margin: 24px 0; border: none; border-top: 1px solid rgba(255,255,255,0.05);">
           <div class="info-label" style="margin-bottom: 12px;">Ask a Question</div>
-          <div style="display: flex; gap: 12px; align-items: flex-start;">
-            <textarea style="flex: 1; min-height:80px" [(ngModel)]="newQuestion" placeholder="Need clarity on technical specs or delivery?"></textarea>
-            <button class="btn-accent" style="padding: 12px 24px" (click)="askQuestion()" [disabled]="!newQuestion">Post Question</button>
+          <div class="ask-form">
+            <textarea [(ngModel)]="newQuestion" placeholder="Need clarity on technical specs or delivery?"></textarea>
+            <button class="btn-accent" (click)="askQuestion()" [disabled]="!newQuestion">Post Question</button>
           </div>
         </div>
       </div>
@@ -195,23 +245,36 @@ import autoTable from 'jspdf-autotable';
     </div>
   `,
   styles: [`
+    .header-inner { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; width: 100%; gap: 16px; }
     .back-link { display: inline-flex; align-items: center; gap: 4px; color: var(--text-secondary); text-decoration: none; font-size: 14px; margin-bottom: 8px; &:hover { color: var(--accent); } }
     .export-btn { background: rgba(0, 212, 255, 0.1); color: var(--accent); border: 1px solid rgba(0,212,255,0.2); border-radius: 8px; padding: 8px 16px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 13px; transition: all 0.3s; &:hover { background: var(--accent); color: #000; } }
-    .detail-grid { display: grid; grid-template-columns: 1fr 340px; gap: 16px; margin-bottom: 24px; }
-    .info-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+    .export-btn.csv { background: rgba(16, 185, 129, 0.1); color: #10b981; border-color: rgba(16,185,129,0.2); margin-right: 8px; &:hover { background: #10b981; color: #000; } }
+    .action-buttons { display: flex; align-items: center; }
+    
+    .detail-container { display: flex; flex-direction: row; gap: 16px; margin-bottom: 24px; }
+    @media (max-width: 992px) { .detail-container { flex-direction: column; } }
+    
+    .main-info { flex: 1; min-width: 0; }
+    .sidebar-actions { width: 340px; flex-shrink: 0; }
+    @media (max-width: 992px) { .sidebar-actions { width: 100%; } }
+
+    .info-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 16px; margin-bottom: 20px; }
     .info-label { font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; }
     .info-value { font-size: 15px; font-weight: 500; color: var(--text-primary); }
     .info-value.big { font-size: 22px; font-weight: 700; color: #10b981; }
     .description-text { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+    
     .bid-form-card { display: flex; flex-direction: column; gap: 14px; p { text-align: center; } }
-    .form-group { display: flex; flex-direction: column; gap: 6px; label { font-size: 11px; font-weight: 600; color: var(--text-secondary); } input, textarea { background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; color: var(--text-primary); outline: none; &:focus { border-color: var(--accent); } } }
-    table { width: 100%; border-collapse: collapse; thead th { text-align: left; padding: 12px 16px; font-size: 11px; color: var(--text-secondary); border-bottom: 1px solid var(--border); } tbody td { padding: 14px 16px; font-size: 14px; border-bottom: 1px solid var(--border); } }
+    .form-group { display: flex; flex-direction: column; gap: 6px; label { font-size: 11px; font-weight: 600; color: var(--text-secondary); } input, textarea { background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; color: var(--text-primary); outline: none; width: 100%; box-sizing: border-box; &:focus { border-color: var(--accent); } } }
+    
+    table { thead th { text-align: left; padding: 12px 16px; font-size: 11px; color: var(--text-secondary); border-bottom: 1px solid var(--border); } tbody td { padding: 14px 16px; font-size: 14px; border-bottom: 1px solid var(--border); } }
     .amount-cell { font-weight: 700; color: #10b981; }
-    .diff-chip { padding: 2px 8px; border-radius: 4px; font-size: 12px; &.lower { background: rgba(16,185,129,0.12); color: #10b981; } &.higher { background: rgba(239,68,68,0.12); color: #ef4444; } }
+    .diff-chip { padding: 2px 8px; border-radius: 4px; font-size: 12px; white-space: nowrap; &.lower { background: rgba(16,185,129,0.12); color: #10b981; } &.higher { background: rgba(239,68,68,0.12); color: #ef4444; } }
     .winner-badge { display: inline-flex; align-items: center; gap: 4px; background: rgba(0,212,255,0.12); color: var(--accent); border-radius: 20px; padding: 4px 10px; font-size: 12px; }
     .pending-badge { color: var(--text-secondary); font-size: 12px; opacity: 0.7; }
     .l1-row { background: rgba(16, 185, 129, 0.08) !important; }
     .l1-badge { background: #10b981; color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; }
+    
     .comparison-actions { margin-bottom: 24px;
       .compare-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text-primary); padding: 10px 20px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.3s ease;
         &:hover { background: rgba(255,255,255,0.1); border-color: var(--accent); }
@@ -221,7 +284,7 @@ import autoTable from 'jspdf-autotable';
     .mark-winner-btn { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); padding: 4px 10px; border-radius: 6px; cursor: pointer; &:hover { border-color: var(--accent); color: var(--accent); } }
 
     .qa-card {
-      .qa-list { display: flex; flex-direction: column; gap: 20px; }
+      .qa-list { display: flex; flex-direction: column; gap: 16px; }
       .qa-item {
         background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 16px;
         .question-row { display: flex; flex-direction: column; gap: 8px;
@@ -231,18 +294,104 @@ import autoTable from 'jspdf-autotable';
         }
         .answer-row { margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; gap: 12px;
           mat-icon { color: var(--accent); transform: rotate(180deg); }
-          .a-content { flex:1;
+          .a-content { flex: 1;
             .a-text { font-size: 14px; color: #cbd5e1; line-height: 1.5; }
             .a-date { display: block; margin-top: 6px; font-size: 10px; color: #4f5b71; }
           }
           .pending-text { font-size: 13px; color: #4f5b71; font-style: italic; }
           .a-form { flex: 1; display: flex; flex-direction: column; gap: 10px;
-            textarea { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 10px; color: #fff; width: 100%; min-height: 60px; outline: none; &:focus { border-color: var(--accent); } }
+            textarea { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 10px; color: #fff; width: 100%; min-height: 60px; outline: none; box-sizing: border-box; &:focus { border-color: var(--accent); } }
             .btn-small { background: var(--accent); color: #000; border: none; padding: 6px 16px; border-radius: 6px; font-weight: 600; font-size: 12px; cursor: pointer; width: fit-content; align-self: flex-end; }
           }
         }
       }
       .empty-qa { padding: 40px; text-align: center; color: #4f5b71; display: flex; flex-direction: column; align-items: center; }
+      .ask-form { display: flex; flex-direction: column; gap: 12px; 
+        textarea { width: 100%; min-height: 80px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 8px; padding: 12px; color: #fff; outline:none; box-sizing: border-box; &:focus { border-color: var(--accent); } }
+        button { align-self: flex-end; padding: 10px 24px; border-radius: 8px; font-weight: 600; }
+      }
+    }
+    
+    .overflow-x-auto { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+    .ai-card {
+      margin-top: 16px;
+      padding: 24px;
+      background: linear-gradient(135deg, rgba(0, 212, 255, 0.08) 0%, rgba(110, 31, 206, 0.08) 100%) !important;
+      border: 1px solid rgba(0, 212, 255, 0.2) !important;
+      position: relative;
+      overflow: hidden;
+
+      &::before {
+        content: '';
+        position: absolute;
+        top: -50px;
+        right: -50px;
+        width: 150px;
+        height: 150px;
+        background: var(--accent);
+        filter: blur(80px);
+        opacity: 0.1;
+      }
+
+      .ai-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+
+        .ai-title {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-weight: 700;
+          color: #fff;
+          font-size: 16px;
+
+          .ai-sparkle { color: var(--accent); font-size: 20px; }
+        }
+
+        .conf-badge {
+          font-size: 10px;
+          font-weight: 700;
+          padding: 4px 10px;
+          border-radius: 20px;
+          text-transform: uppercase;
+          &.high { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+          &.med { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+        }
+      }
+
+      .ai-body {
+        .pred-price {
+          margin-bottom: 20px;
+          .label { font-size: 12px; color: rgba(255,255,255,0.6); margin-bottom: 4px; }
+          .value { font-size: 32px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
+        }
+
+        .market-stats {
+          display: flex;
+          gap: 24px;
+          margin-bottom: 20px;
+          .stat {
+            display: flex;
+            flex-direction: column;
+            .label { font-size: 10px; color: rgba(255,255,255,0.4); text-transform: uppercase; margin-bottom: 4px; }
+            .val { font-size: 14px; font-weight: 600; color: #fff; display: flex; align-items: center; gap: 4px; }
+            .trend-down { color: #f43f5e; mat-icon { font-size: 16px; width: 16px; height: 16px; } }
+          }
+        }
+
+        .ai-insight {
+          background: rgba(255, 255, 255, 0.04);
+          border-radius: 12px;
+          padding: 16px;
+          display: flex;
+          gap: 12px;
+          mat-icon { color: var(--accent); font-size: 20px; flex-shrink: 0; }
+          p { margin: 0; font-size: 13px; color: rgba(255,255,255,0.8); line-height: 1.5; }
+        }
+      }
     }
   `]
 })
@@ -256,6 +405,8 @@ export class TenderDetailComponent implements OnInit {
   selectedFile: File | null = null;
   submitting = false;
   compareMode = false;
+  prediction: BidPrediction | null = null;
+  loadingAI = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -273,6 +424,18 @@ export class TenderDetailComponent implements OnInit {
       this.bids = t.bids ?? [];
     });
     this.loadClarifications(id);
+    this.loadPrediction(id);
+  }
+
+  loadPrediction(id: number) {
+    this.loadingAI = true;
+    this.tenderSvc.getPrediction(id).subscribe({
+      next: (p) => {
+        this.prediction = p;
+        this.loadingAI = false;
+      },
+      error: () => this.loadingAI = false
+    });
   }
 
   loadClarifications(id: number) {
@@ -372,7 +535,7 @@ export class TenderDetailComponent implements OnInit {
       doc.setFontSize(10); doc.setTextColor(100);
       doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 30);
 
-      // Tender Details
+      // Project Details
       doc.setFontSize(14); doc.setTextColor(0);
       doc.text('Tender Information', 14, 45);
       doc.setFontSize(10);
@@ -406,4 +569,22 @@ export class TenderDetailComponent implements OnInit {
   }
 
   formatLakh(v: number) { return (v / 100000).toFixed(2); }
+
+  exportCSV() {
+    if (!this.tender || !this.bids.length) return;
+    
+    let csv = 'Index,Vendor Name,Amount (₹),is L1,Status\n';
+    this.bids.forEach((b, i) => {
+      csv += `${i + 1},"${b.vendor_name}",${b.amount},${this.isL1(b)?'YES':'NO'},${b.won?'Winner':'Pending'}\n`;
+    });
+    
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Tender_Report_${this.tender.id}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+    this.snack.open('CSV Exported!', 'OK', { duration: 2000 });
+  }
 }

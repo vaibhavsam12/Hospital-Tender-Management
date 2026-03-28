@@ -24,15 +24,15 @@ import { Notification } from './models/models';
       <aside class="sidebar" *ngIf="auth.isLoggedIn()">
         <div class="sidebar-brand">
           <mat-icon class="brand-icon">local_hospital</mat-icon>
-          <span class="brand-text">TenderMed Pro</span>
+          <span class="brand-text">HealthTender Pro</span>
         </div>
         
         <div class="user-profile" *ngIf="auth.currentUser$ | async as user">
           <div class="avatar">{{ user.full_name?.charAt(0) }}</div>
           <div class="info">
             <div class="name">{{ user.full_name }}</div>
-            <div class="role">{{ user.role }}</div>
-            <div class="last-login" *ngIf="user.last_login">Active: {{ user.last_login | date:'shortTime' }}</div>
+            <div class="org-name" *ngIf="user.organization">{{ user.organization.display_name }}</div>
+            <div class="role-badge">{{ user.role }}</div>
           </div>
         </div>
 
@@ -112,6 +112,7 @@ export class AppComponent implements OnInit, OnDestroy {
     { path: '/my-bids', icon: 'assignment_turned_in', label: 'My Bids', roles: ['vendor'] },
     { path: '/analytics', icon: 'bar_chart', label: 'Analytics', roles: ['admin', 'officer', 'finance'] },
     { path: '/audit', icon: 'history', label: 'Audit Trail', roles: ['admin'] },
+    { path: '/settings', icon: 'settings', label: 'Settings', roles: ['admin'] },
   ];
 
   currentRouteTitle = 'Dashboard';
